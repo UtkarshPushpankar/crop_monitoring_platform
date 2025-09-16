@@ -74,4 +74,4 @@ cd ml-models && pip install -r requirements.txt && python api_server.py
 
 ---
 
-**Developed for Smart India Hackathon 2024 - Precision Agriculture Challenge**
+**Developed for Smart India Hackathon 2025 - Precision Agriculture Challenge**
