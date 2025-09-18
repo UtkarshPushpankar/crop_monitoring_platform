@@ -4,7 +4,7 @@ const app=express();
 const mongoose = require("mongoose");
 const PORT=process.env.PORT
 const authRouter=require("./routes/auth")
-const verifyUser=require("./middleware/authmiddleware")
+const verifyUser=require("./middleware/authMiddleware.js")
 
 
 app.use(express.json());
