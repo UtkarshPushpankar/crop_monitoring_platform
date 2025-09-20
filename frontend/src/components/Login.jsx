@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Leaf } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
-const Signup = () => {
+const Login = () => {
   const [formData, setFormData] = useState({
-    name: '',
     email: '',
     password: '',
     agreeToTerms: false
@@ -18,10 +18,35 @@ const Signup = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Form submitted:', formData);
-  };
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!email || !password) {
+            alert("Please fill in all fields");
+            return;
+        }  
+        setLoading(true);
+        try {
+            const res = await fetch("http://localhost:5000/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ email, password }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                console.log("Login successfull: ");
+                 login({ name: data.user.name });
+                navigate("/");
+            } else {
+                alert("Login failed");
+            }
+        } catch (err) {
+            console.error("Error:", err);
+            alert("Server error");
+        }finally{
+            setLoading(false);
+        }
+    };
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-gradient-to-br from-green-100 via-green-200 to-green-300 relative overflow-hidden">
@@ -42,31 +67,15 @@ const Signup = () => {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 flex  items-center justify-center min-h-[100vh] sm:px-6 lg:px-8 py-4">
+      <div className="relative z-10 flex items-center justify-center min-h-[100vh] sm:px-6 lg:px-8 py-4">
         <div className="max-w-4xl w-full grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           
           {/* Left Side - Signup Form */}
           <div className="bg-white/20 backdrop-blur-sm rounded-2xl shadow-xl p-6 lg:p-8">
-            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-6">Get Started Now</h1>
+            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">Welcome Back</h1>
+            <h3 className="text-xs lg:text-lg font-medium text-gray-700 mb-6">Enter your credentials to access your account</h3>
             
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Name Field */}
-              <div>
-                <label htmlFor="name" className="block text-base font-medium text-gray-700 mb-1">
-                  Name
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  placeholder="Enter your name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 bg-green-50/50"
-                  required
-                />
-              </div>
-
               {/* Email Field */}
               <div>
                 <label htmlFor="email" className="block text-base font-medium text-gray-700 mb-1">
@@ -100,29 +109,12 @@ const Signup = () => {
                   required
                 />
               </div>
-
-              {/* Terms Checkbox */}
-              <div className="flex items-center pt-2">
-                <input
-                  type="checkbox"
-                  id="agreeToTerms"
-                  name="agreeToTerms"
-                  checked={formData.agreeToTerms}
-                  onChange={handleInputChange}
-                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-                  required
-                />
-                <label htmlFor="agreeToTerms" className="ml-2 block text-sm text-gray-700">
-                  I agree to the terms & policy
-                </label>
-              </div>
-
-              {/* Signup Button */}
+              {/* Login Button */}
               <button
                 type="submit"
                 className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-2.5 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl mt-4"
               >
-                Signup
+                Login
               </button>
 
               {/* Divider */}
@@ -163,9 +155,9 @@ const Signup = () => {
 
               {/* Sign In Link */}
               <div className="text-center mt-4">
-                <span className="text-sm text-gray-600">Have an account? </span>
-                <NavLink to="/login" className="text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200">
-                  Login Now
+                <span className="text-sm text-gray-600">Don't have an account? </span>
+                <NavLink to="/signup" className="text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200">
+                  SignUp!
                 </NavLink>
               </div>
             </form>
@@ -248,4 +240,4 @@ const Signup = () => {
   );
 };
 
-export default Signup;
+export default Login;
