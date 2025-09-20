@@ -4,7 +4,7 @@ import Upload from './uploadImage/uplaod'
 import Chatbot from './Chatbot/Chatbutton'
 import { Route, Routes } from 'react-router-dom'
 import HomePage from './pages/HomePage'
-import LoginPage from './pages/LoginPage'
+import Login from './components/Login'
 import Navbar from './components/Navbar'
 import Signup from './components/Signup'
 
@@ -20,7 +20,7 @@ function App() {
             {<>
               <HomePage />
             </>} />
-          <Route path='/login' element={<LoginPage />} />
+          <Route path='/login' element={<Login />} />
           <Route path='/signup' element={<Signup />} />
         </Routes>
       </div>
