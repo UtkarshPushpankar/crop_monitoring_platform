@@ -29,7 +29,7 @@ const Footer = () => {
                                     <Leaf className="w-4 h-4 text-white" />
                                 </div>
                                 <h2 className="text-xl font-bold bg-gradient-to-r from-white to-emerald-100 bg-clip-text text-transparent">
-                                    AgriConnect HUB
+                                        फसलSaathi
                                 </h2>
                             </div>
                             <p className="text-emerald-50 leading-relaxed max-w-lg text-md font-[500]">
@@ -72,7 +72,7 @@ const Footer = () => {
                                 </div>
                                 <div>
                                     <p className="text-emerald-50 font-medium text-xs">Email Us</p>
-                                    <p className="text-emerald-100 text-xs">info@agriconnecthub.com</p>
+                                    <p className="text-emerald-100 text-xs">info@fasalsaathi.com</p>
                                 </div>
                             </div>
                         </div>
@@ -111,12 +111,12 @@ const Footer = () => {
                     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300 to-transparent"></div>
                     <div className="flex flex-col md:flex-row justify-between items-center space-y-1 md:space-y-0">
                         <p className="text-emerald-100 font-medium text-xs">
-                            © 2025 AgriConnect Hub. All Rights Reserved.
+                            © 2025 फसलSaathi. All Rights Reserved.
                         </p>
                         <p className="text-emerald-100 text-xs">
                             Designed And Developed By{' '}
                             <span className="text-white font-semibold">
-                                AgriConnect Team
+                            फसलSaathi Team
                             </span>
                         </p>
                     </div>
