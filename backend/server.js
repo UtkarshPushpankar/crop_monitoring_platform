@@ -5,6 +5,7 @@ const cors = require('cors');
 const mongoose = require("mongoose");
 const PORT=process.env.PORT
 const authRouter=require("./routes/auth")
+const MandiRouter=require("./routes/mandiroute.js")
 const verifyUser=require("./middleware/authMiddleware.js")
 
 app.use(cors({
@@ -32,6 +33,10 @@ app.get("/verify-user", verifyUser, (req, res) => {
   res.json({ message: "User verified", name: req.user.name });
 });
 
+app.use('/mandidata',MandiRouter)
+
+app.use('/farmer',require('./routes/carbon'))
+
 app.listen(PORT,()=>
     { console.log(`Server started on ${PORT}`)
 })
@@ -39,6 +44,7 @@ app.listen(PORT,()=>
 app.get("/health", (req, res) => {
   res.json({ status: "OK" });
 });
+
 
 
 mongoose
