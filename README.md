@@ -5,7 +5,7 @@
 [![React](https://img.shields.io/badge/React-18.x-blue)](https://reactjs.org/)
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://python.org)
 
-> **Smart India Hackathon 2024 Project**  
+> **Smart India Hackathon 2025 Project**  
 > AI-powered monitoring of crop health, soil condition, and pest risks using multispectral/hyperspectral imaging and sensor data.
 
 ## 🎯 Overview
