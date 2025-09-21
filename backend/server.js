@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const PORT=process.env.PORT
 const authRouter=require("./routes/auth")
 const verifyUser=require("./middleware/authMiddleware.js")
+require("./config/passport"); 
 
 app.use(cors({
   origin: ['http://localhost:5173', 'http://localhost:3000'], // Multiple origins
@@ -14,7 +15,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
-app.use("/",authRouter);
+
+app.use("/auth",authRouter);
 
 
 app.post("/logout", (req, res) => {
