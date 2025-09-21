@@ -52,8 +52,8 @@ const Upload = () => {
             {/* works on pc and  mobile  */}
             <button onClick={openFilePicker} className='bg-green-500 text-xl text-white rounded-lg p-3 cursor-pointer'>Upload</button>
 
-            {/*works on  mobile  */}
-            <button onClick={openFilePickerCapture} className='bg-green-500 text-xl text-white rounded-lg p-3 ml-4 md:hidden'>Capture</button>
+            {/* works on  mobile 
+            <button onClick={openFilePickerCapture} className='bg-green-500 text-xl text-white rounded-lg p-3 ml-4 md:hidden'>Capture</button> */}
 
             {image && (
         <img src={image} alt="Preview" className="w-40 h-40 rounded-lg mt-4" />
