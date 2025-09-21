@@ -42,7 +42,7 @@ function App() {
           <Route path='/privacypolicy' element={<PrivacyPolicy />}/>
           <Route path='/crop-disease-detection' element={<CropDiseaseDetection />}/>
           <Route path='/agritools' element={<AgriTools />}/>
-          <Route path='/pest-control' element={<PestControlMonitoring />}/>
+          <Route path='/pestcontrol' element={<PestControlMonitoring />}/>
 
         </Routes>
 

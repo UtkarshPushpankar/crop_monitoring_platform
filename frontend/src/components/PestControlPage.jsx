@@ -1,672 +1,412 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Camera, Microscope, Brain, Leaf, AlertTriangle, CheckCircle, XCircle, Loader, Droplets, Sun, Wind, Activity, Zap, Target, FileText } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Upload, Play, Download, AlertTriangle, TrendingUp, Droplets, Wind, Gauge, ThermometerSun } from 'lucide-react';
 
-const CropDiseaseDetectionPage = () => {
-    const [normalImage, setNormalImage] = useState({ file: null, preview: null });
-    const [hyperspectralImage, setHyperspectralImage] = useState({ file: null, preview: null });
-    const [trueLabel, setTrueLabel] = useState({ file: null, preview: null });
-    const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const [result, setResult] = useState(null);
-    const [error, setError] = useState(null);
+const PestControlMonitoring = () => {
+    const [formData, setFormData] = useState({
+        surfacePressure: '',
+        windSpeed: '',
+        relativeHumidity: '',
+        totalEvaporation: ''
+    });
+    const [uploadedFile, setUploadedFile] = useState(null);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [showResults, setShowResults] = useState(false);
+    const [isLoaded, setIsLoaded] = useState(false);
 
-    // Backend URL - update this to match your Flask server
-    const BACKEND_URL = 'http://localhost:5000';
+    useEffect(() => {
+        setIsLoaded(true);
+    }, []);
 
-    const handleImageUpload = (file, type) => {
-        const preview = type === 'normal' ? URL.createObjectURL(file) : null;
-        if (type === 'normal') {
-            setNormalImage({ file, preview });
-        } else if (type === 'hyperspectral') {
-            setHyperspectralImage({ file, preview });
-        } else if (type === 'truelabel') {
-            setTrueLabel({ file, preview: null });
-        }
-        // Clear any previous errors
-        setError(null);
+    const handleInputChange = (field, value) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
     };
 
-    const runAnalysis = async () => {
-        if (!normalImage.file && !hyperspectralImage.file) {
-            setError("Please upload at least one image before running analysis.");
+    const handleFileUpload = (event) => {
+        const file = event.target.files[0];
+        if (file && file.type === 'text/csv') {
+            setUploadedFile(file);
+        } else {
+            alert('Please upload a CSV file');
+        }
+    };
+
+    const generateOutput = async () => {
+        if (!uploadedFile) {
+            alert('Please upload a CSV file before generating output');
             return;
         }
 
-        setIsAnalyzing(true);
-        setResult(null);
-        setError(null);
+        setIsGenerating(true);
 
-        try {
-            // Create FormData for file upload
-            const formData = new FormData();
-
-            if (normalImage.file) {
-                formData.append('rgb_image', normalImage.file);
-            }
-
-            if (hyperspectralImage.file) {
-                formData.append('hsi_image', hyperspectralImage.file);
-            }
-
-            if (trueLabel.file) {
-                formData.append('true_label', trueLabel.file);
-            }
-
-            // Make API call to backend
-            const response = await fetch(`${BACKEND_URL}/predict`, {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to analyze images');
-            }
-
-            const data = await response.json();
-            setResult(data);
-
-        } catch (err) {
-            console.error('Analysis error:', err);
-            setError(err.message || 'Failed to analyze images. Please check your connection and try again.');
-
-            // Fallback to mock result for demo purposes
-            console.log('Falling back to mock result for demo...');
-            const mockResults = [
-                { class: 'healthy', confidence: 94.2, details: 'Crop shows healthy vegetation indices with normal spectral signatures and optimal chlorophyll content. NDVI values indicate robust photosynthetic activity.' },
-                { class: 'rust', confidence: 87.6, details: 'Detected wheat stripe rust patterns in hyperspectral analysis with characteristic yellow-orange pustules. Immediate fungicide treatment recommended.' },
-                { class: 'other', confidence: 76.3, details: 'Identified stress indicators suggesting nutrient deficiency, water stress, or early-stage disease symptoms. Monitor closely and consider soil testing.' }
-            ];
-            setResult(mockResults[Math.floor(Math.random() * mockResults.length)]);
-        } finally {
-            setIsAnalyzing(false);
-        }
+        // Simulate processing time
+        setTimeout(() => {
+            setIsGenerating(false);
+            setShowResults(true);
+        }, 3000);
     };
 
-    const getResultIcon = (resultClass) => {
-        switch (resultClass) {
-            case 'healthy': return <CheckCircle className="w-4 h-4 text-white" />;
-            case 'rust': return <AlertTriangle className="w-4 h-4 text-white" />;
-            case 'other': return <XCircle className="w-4 h-4 text-white" />;
-            default: return null;
-        }
+    const HeatmapCell = ({ intensity, color }) => (
+        <div
+            className={`w-4 h-4 ${color} transition-all duration-300 hover:scale-110 hover:z-10 relative rounded-sm`}
+            style={{ opacity: intensity }}
+        />
+    );
+
+    const generateHeatmapData = (baseColor) => {
+        return Array.from({ length: 15 }, (_, row) =>
+            Array.from({ length: 20 }, (_, col) => ({
+                intensity: Math.random() * 0.8 + 0.2,
+                value: Math.random() * 100
+            }))
+        );
     };
 
-    const getResultColor = (resultClass) => {
-        switch (resultClass) {
-            case 'healthy': return 'from-emerald-500 via-green-500 to-teal-600';
-            case 'rust': return 'from-red-500 via-rose-500 to-pink-600';
-            case 'other': return 'from-amber-500 via-orange-500 to-yellow-600';
-            default: return 'from-gray-500 to-gray-600';
-        }
-    };
+    const HeatmapVisualization = ({ title, data, colorClass, unit, date }) => (
+        <div className={`bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-6 border border-white/20 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
+            <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+                <span className="text-sm text-gray-600 bg-gradient-to-r from-blue-100 to-purple-100 px-3 py-1 rounded-full border border-blue-200">{date}</span>
+            </div>
 
-    const getResultTitle = (resultClass) => {
-        switch (resultClass) {
-            case 'healthy': return 'Healthy Crop';
-            case 'rust': return 'Rust Disease Detected';
-            case 'other': return 'Other Conditions Detected';
-            default: return 'Analysis Complete';
-        }
-    };
+            <div className="relative">
+                <div className="grid grid-cols-20 gap-0 mb-4 p-2 bg-gradient-to-br from-gray-50 to-white rounded-lg">
+                    {data.map((row, rowIndex) =>
+                        row.map((cell, colIndex) => (
+                            <HeatmapCell
+                                key={`${rowIndex}-${colIndex}`}
+                                intensity={cell.intensity}
+                                color={colorClass}
+                            />
+                        ))
+                    )}
+                </div>
+
+                {/* Axes labels */}
+                <div className="absolute -bottom-8 left-0 text-xs text-gray-500">
+                    <span>76° longitude</span>
+                </div>
+                <div className="absolute -bottom-8 right-0 text-xs text-gray-500">
+                    <span>84° longitude</span>
+                </div>
+                <div className="absolute -left-12 top-0 text-xs text-gray-500 transform -rotate-90 origin-center">
+                    <span>19° latitude</span>
+                </div>
+                <div className="absolute -left-12 bottom-0 text-xs text-gray-500 transform -rotate-90 origin-center">
+                    <span>12° latitude</span>
+                </div>
+            </div>
+
+            {/* Legend */}
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                <span className="text-xs text-gray-600">Low</span>
+                <div className="flex space-x-1">
+                    {Array.from({ length: 10 }, (_, i) => (
+                        <div
+                            key={i}
+                            className={`w-4 h-4 ${colorClass} rounded-sm`}
+                            style={{ opacity: (i + 1) / 10 }}
+                        />
+                    ))}
+                </div>
+                <span className="text-xs text-gray-600">High</span>
+                <span className="text-xs text-gray-500 ml-4">{unit}</span>
+            </div>
+        </div>
+    );
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-green-100 via-green-200 to-green-300 relative overflow-hidden">
-            {/* Wavy Top Border - Reduced size */}
+        <div className="min-h-screen bg-gradient-to-br from-emerald-100 via-green-200 to-cyan-300 relative overflow-hidden">
+            {/* Wavy Top Border */}
             <div className="absolute top-0 left-0 w-full">
-                <svg className="w-full h-16" viewBox="0 0 1440 64" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-                    <path d="M0,0 C240,50 480,50 720,25 C960,0 1200,0 1440,25 L1440,0 L0,0 Z" fill="rgba(34, 197, 94, 0.7)" />
-                    <path d="M0,10 C240,60 480,60 720,35 C960,10 1200,10 1440,35 L1440,0 L0,0 Z" fill="rgba(34, 197, 94, 0.5)" />
-                    <path d="M0,20 C240,70 480,70 720,45 C960,20 1200,20 1440,45 L1440,0 L0,0 Z" fill="rgba(34, 197, 94, 0.3)" />
+                <svg className="w-full h-24" viewBox="0 0 1440 96" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+                    <path d="M0,0 C240,72 480,72 720,36 C960,0 1200,0 1440,36 L1440,0 L0,0 Z" fill="rgba(34, 197, 94, 0.6)" />
+                    <path d="M0,12 C240,84 480,84 720,48 C960,12 1200,12 1440,48 L1440,0 L0,0 Z" fill="rgba(34, 197, 94, 0.4)" />
+                    <path d="M0,24 C240,96 480,96 720,60 C960,24 1200,24 1440,60 L1440,0 L0,0 Z" fill="rgba(34, 197, 94, 0.2)" />
                 </svg>
             </div>
 
-            {/* Background Pattern - Reduced size */}
-            <div className="absolute inset-0 opacity-25">
-                <svg className="absolute bottom-0 left-0 w-full h-24" viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M0,40L48,50C96,60,192,80,288,80C384,80,480,60,576,56.7C672,53,768,66,864,66.7C960,66,1056,53,1152,53.3C1248,53,1344,66,1392,73.3L1440,80L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z" fill="rgba(34, 197, 94, 0.15)" />
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-20">
+                <svg className="absolute bottom-0 left-0 w-full h-32" viewBox="0 0 1440 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0,48L48,56C96,64,192,80,288,80C384,80,480,64,576,61.3C672,58,768,69,864,69.3C960,69,1056,58,1152,58.7C1248,58,1344,69,1392,74.7L1440,80L1440,160L1392,160C1344,160,1248,160,1152,160C1056,160,960,160,864,160C768,160,672,160,576,160C480,160,384,160,288,160C192,160,96,160,48,160L0,160Z" fill="rgba(34, 197, 94, 0.1)" />
                 </svg>
             </div>
 
-            {/* Header - Reduced size */}
-            <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="relative z-10 bg-white/15 backdrop-blur-md border-b border-white/25 sticky top-0"
-            >
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                            <motion.div
-                                whileHover={{ scale: 1.1, rotate: 10 }}
-                                whileTap={{ scale: 0.95 }}
-                                className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-2xl shadow-xl"
-                            >
-                                <Leaf className="w-6 h-6 text-white" />
-                            </motion.div>
-                            <div>
-                                <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-800 via-green-700 to-teal-700 bg-clip-text text-transparent">
-                                    AI Crop Disease Detection
-                                </h1>
-                                <p className="text-gray-800 mt-1 text-sm font-medium">Advanced hyperspectral imaging analysis for precision agriculture</p>
+            {/* Floating particles */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                {[...Array(8)].map((_, i) => (
+                    <div
+                        key={i}
+                        className={`absolute w-3 h-3 bg-gradient-to-br from-green-300 to-blue-300 rounded-full opacity-30 animate-bounce transform transition-all duration-500 ${isLoaded ? 'scale-100 opacity-30' : 'scale-0 opacity-0'}`}
+                        style={{
+                            left: `${10 + i * 12}%`,
+                            top: `${15 + (i % 4) * 20}%`,
+                            animationDelay: `${i * 0.6}s`,
+                            animationDuration: `${3 + i * 0.4}s`,
+                            transitionDelay: `${1000 + i * 150}ms`
+                        }}
+                    />
+                ))}
+            </div>
+
+            <div className="relative z-10 p-6">
+                <div className="max-w-7xl mx-auto">
+                    {/* Header */}
+                    <div className={`mb-8 text-center transform transition-all duration-700 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+                        <div className="flex items-center justify-center mb-4">
+                            {/* Logo */}
+                            <div className="relative mr-4">
+                                <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                    <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z" />
+                                    </svg>
+                                </div>
+                                <div className="absolute inset-0 rounded-2xl border-2 border-green-400 animate-ping opacity-30"></div>
                             </div>
+                            <h1 className="text-4xl md:text-5xl font-bold text-black">
+                                AgriConnect AI- Powered Pest Control Monitoring
+                            </h1>
                         </div>
-
-                        {/* Environmental Indicators - Reduced size */}
-                        <div className="hidden lg:flex items-center space-x-2">
-                            <motion.div
-                                whileHover={{ scale: 1.05, y: -1 }}
-                                className="flex items-center space-x-2 bg-white/25 backdrop-blur-sm rounded-xl px-3 py-2 shadow-lg border border-white/30"
-                            >
-                                <div className="w-6 h-6 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-                                    <Sun className="w-3 h-3 text-white" />
-                                </div>
-                                <div>
-                                    <span className="text-xs font-bold text-gray-800">24°C</span>
-                                    <p className="text-xs text-gray-600">Temp</p>
-                                </div>
-                            </motion.div>
-                            <motion.div
-                                whileHover={{ scale: 1.05, y: -1 }}
-                                className="flex items-center space-x-2 bg-white/25 backdrop-blur-sm rounded-xl px-3 py-2 shadow-lg border border-white/30"
-                            >
-                                <div className="w-6 h-6 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-full flex items-center justify-center">
-                                    <Droplets className="w-3 h-3 text-white" />
-                                </div>
-                                <div>
-                                    <span className="text-xs font-bold text-gray-800">68%</span>
-                                    <p className="text-xs text-gray-600">Humidity</p>
-                                </div>
-                            </motion.div>
-                            <motion.div
-                                whileHover={{ scale: 1.05, y: -1 }}
-                                className="flex items-center space-x-2 bg-white/25 backdrop-blur-sm rounded-xl px-3 py-2 shadow-lg border border-white/30"
-                            >
-                                <div className="w-6 h-6 bg-gradient-to-br from-gray-400 to-slate-500 rounded-full flex items-center justify-center">
-                                    <Wind className="w-3 h-3 text-white" />
-                                </div>
-                                <div>
-                                    <span className="text-xs font-bold text-gray-800">12 km/h</span>
-                                    <p className="text-xs text-gray-600">Wind</p>
-                                </div>
-                            </motion.div>
-                        </div>
+                        <p className="text-xl text-gray-700 max-w-3xl mx-auto">
+                            Empowering farmers with AI-powered monitoring of crop health, soil condition, and pest risks using multispectral imaging and environmental data analysis
+                        </p>
                     </div>
-                </div>
-            </motion.div>
 
-            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="grid lg:grid-cols-2 gap-8">
-                    {/* Upload Section - Made more compact */}
-                    <motion.div
-                        initial={{ opacity: 0, x: -30 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="space-y-4"
-                    >
-                        <div className="bg-white/25 backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-white/40">
-                            <div className="text-center mb-4">
-                                <h2 className="text-xl font-bold text-gray-900 mb-1">Upload Crop Files</h2>
-                                <p className="text-gray-700 text-sm">Upload your crop files for AI-powered disease analysis</p>
+                    {/* Input Section */}
+                    <div className={`bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl p-8 mb-8 border border-white/30 transform transition-all duration-700 delay-200 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+                        <h2 className="text-2xl font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-8 flex items-center">
+                            <Gauge className="mr-3 text-blue-600" size={28} />
+                            Environmental Parameters
+                        </h2>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                            <div className="group">
+                                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                    <Gauge className="mr-2 text-blue-500" size={16} />
+                                    Surface Pressure (hPa)
+                                </label>
+                                <input
+                                    type="number"
+                                    value={formData.surfacePressure}
+                                    onChange={(e) => handleInputChange('surfacePressure', e.target.value)}
+                                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-gradient-to-br from-white to-blue-50 group-hover:shadow-lg"
+                                    placeholder="e.g., 1013.25"
+                                />
                             </div>
 
-                            {/* Error Display */}
-                            {error && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="mb-3 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm"
-                                >
-                                    <div className="flex items-center">
-                                        <AlertTriangle className="w-4 h-4 mr-2" />
-                                        <span>{error}</span>
-                                    </div>
-                                </motion.div>
-                            )}
-
-                            {/* Normal Image Upload - Reduced size */}
-                            <motion.div
-                                whileHover={{ scale: 1.01, y: -1 }}
-                                className="mb-4"
-                            >
-                                <label className="block text-sm font-bold text-gray-800 mb-2 flex items-center">
-                                    <div className="w-4 h-4 bg-gradient-to-br from-green-500 to-emerald-600 rounded flex items-center justify-center mr-2">
-                                        <Camera className="w-2 h-2 text-white" />
-                                    </div>
-                                    Upload RGB crop file (.pt format)
+                            <div className="group">
+                                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                    <Wind className="mr-2 text-green-500" size={16} />
+                                    Wind Speed (m/s)
                                 </label>
-                                <div className="relative group">
+                                <input
+                                    type="number"
+                                    value={formData.windSpeed}
+                                    onChange={(e) => handleInputChange('windSpeed', e.target.value)}
+                                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300 bg-gradient-to-br from-white to-green-50 group-hover:shadow-lg"
+                                    placeholder="e.g., 5.2"
+                                />
+                            </div>
+
+                            <div className="group">
+                                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                    <Droplets className="mr-2 text-blue-500" size={16} />
+                                    Relative Humidity (%)
+                                </label>
+                                <input
+                                    type="number"
+                                    value={formData.relativeHumidity}
+                                    onChange={(e) => handleInputChange('relativeHumidity', e.target.value)}
+                                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-gradient-to-br from-white to-blue-50 group-hover:shadow-lg"
+                                    placeholder="e.g., 65.8"
+                                />
+                            </div>
+
+                            <div className="group">
+                                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                    <ThermometerSun className="mr-2 text-orange-500" size={16} />
+                                    Total Evaporation (mm)
+                                </label>
+                                <input
+                                    type="number"
+                                    value={formData.totalEvaporation}
+                                    onChange={(e) => handleInputChange('totalEvaporation', e.target.value)}
+                                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-300 bg-gradient-to-br from-white to-orange-50 group-hover:shadow-lg"
+                                    placeholder="e.g., 2.4"
+                                />
+                            </div>
+                        </div>
+
+                        {/* File Upload and Generate Section */}
+                        <div className="flex flex-col lg:flex-row gap-6 items-end">
+                            <div className="flex-1">
+                                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                    <Upload className="mr-2 text-purple-500" size={16} />
+                                    Upload CSV Data File
+                                </label>
+                                <div className="relative">
                                     <input
                                         type="file"
-                                        accept=".pt,.pth,.pkl"
-                                        onChange={(e) => {
-                                            const file = e.target.files?.[0];
-                                            if (file) handleImageUpload(file, 'normal');
-                                        }}
-                                        className="hidden"
-                                        id="normal-upload"
+                                        accept=".csv"
+                                        onChange={handleFileUpload}
+                                        className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-300 bg-gradient-to-br from-white to-purple-50 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-purple-50 file:to-blue-50 file:text-purple-700 hover:file:from-purple-100 hover:file:to-blue-100"
                                     />
-                                    <label
-                                        htmlFor="normal-upload"
-                                        className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-emerald-400 rounded-xl bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 hover:from-emerald-100 hover:via-green-100 hover:to-teal-100 cursor-pointer transition-all duration-300 group-hover:border-emerald-500 group-hover:shadow-lg relative overflow-hidden transform group-hover:scale-102"
-                                    >
-                                        {normalImage.file ? (
-                                            <motion.div
-                                                initial={{ scale: 0.8, opacity: 0 }}
-                                                animate={{ scale: 1, opacity: 1 }}
-                                                className="relative w-full h-full z-10 flex items-center justify-center"
-                                            >
-                                                <div className="text-center">
-                                                    <Camera className="w-8 h-8 text-green-600 mx-auto mb-1" />
-                                                    <p className="text-green-800 font-bold text-xs truncate max-w-32">
-                                                        {normalImage.file.name}
-                                                    </p>
-                                                    <p className="text-green-600 text-xs">RGB data loaded</p>
-                                                </div>
-                                            </motion.div>
-                                        ) : (
-                                            <motion.div
-                                                className="flex flex-col items-center z-10"
-                                                whileHover={{ y: -2 }}
-                                            >
-                                                <motion.div
-                                                    whileHover={{ rotate: 5, scale: 1.1 }}
-                                                    className="w-8 h-8 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-lg flex items-center justify-center mb-2 shadow-lg"
-                                                >
-                                                    <Upload className="w-4 h-4 text-white" />
-                                                </motion.div>
-                                                <p className="text-sm font-bold text-emerald-800 mb-1">Upload RGB File</p>
-                                                <p className="text-emerald-700 font-medium text-xs">.pt format preferred</p>
-                                            </motion.div>
-                                        )}
-                                    </label>
+                                    {uploadedFile && (
+                                        <div className="mt-3 text-sm text-green-600 flex items-center bg-green-50 p-2 rounded-lg">
+                                            <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
+                                            {uploadedFile.name} uploaded successfully
+                                        </div>
+                                    )}
                                 </div>
-                            </motion.div>
+                            </div>
 
-                            {/* Hyperspectral Image Upload - Reduced size */}
-                            <motion.div
-                                whileHover={{ scale: 1.01, y: -1 }}
-                                className="mb-4"
+                            <button
+                                onClick={generateOutput}
+                                disabled={isGenerating || !uploadedFile}
+                                className="bg-gradient-to-r from-green-600 to-green-700 text-white px-10 py-4 rounded-2xl font-semibold hover:from-green-700 hover:to-green-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center shadow-xl hover:shadow-2xl transform hover:-translate-y-1 hover:scale-105"
                             >
-                                <label className="block text-sm font-bold text-gray-800 mb-2 flex items-center">
-                                    <div className="w-4 h-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded flex items-center justify-center mr-2">
-                                        <Microscope className="w-2 h-2 text-white" />
-                                    </div>
-                                    Upload hyperspectral file (.pt format)
-                                </label>
-                                <div className="relative group">
-                                    <input
-                                        type="file"
-                                        accept=".pt,.pth,.pkl"
-                                        onChange={(e) => {
-                                            const file = e.target.files?.[0];
-                                            if (file) handleImageUpload(file, 'hyperspectral');
-                                        }}
-                                        className="hidden"
-                                        id="hyperspectral-upload"
-                                    />
-                                    <label
-                                        htmlFor="hyperspectral-upload"
-                                        className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-blue-400 rounded-xl bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 hover:from-blue-100 hover:via-indigo-100 hover:to-purple-100 cursor-pointer transition-all duration-300 group-hover:border-blue-500 group-hover:shadow-lg relative overflow-hidden transform group-hover:scale-102"
-                                    >
-                                        {hyperspectralImage.file ? (
-                                            <motion.div
-                                                initial={{ scale: 0.8, opacity: 0 }}
-                                                animate={{ scale: 1, opacity: 1 }}
-                                                className="relative w-full h-full z-10 flex items-center justify-center"
-                                            >
-                                                <div className="text-center">
-                                                    <Microscope className="w-8 h-8 text-blue-600 mx-auto mb-1" />
-                                                    <p className="text-blue-800 font-bold text-xs truncate max-w-32">
-                                                        {hyperspectralImage.file.name}
-                                                    </p>
-                                                    <p className="text-blue-600 text-xs">Hyperspectral loaded</p>
-                                                </div>
-                                            </motion.div>
-                                        ) : (
-                                            <motion.div
-                                                className="flex flex-col items-center z-10"
-                                                whileHover={{ y: -2 }}
-                                            >
-                                                <motion.div
-                                                    whileHover={{ rotate: -5, scale: 1.1 }}
-                                                    className="w-8 h-8 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-lg flex items-center justify-center mb-2 shadow-lg"
-                                                >
-                                                    <Microscope className="w-4 h-4 text-white" />
-                                                </motion.div>
-                                                <p className="text-sm font-bold text-blue-800 mb-1">Upload Hyperspectral</p>
-                                                <p className="text-blue-700 font-medium text-xs">.pt format preferred</p>
-                                            </motion.div>
-                                        )}
-                                    </label>
-                                </div>
-                            </motion.div>
-
-                            {/* True Label Upload - New field */}
-                            <motion.div
-                                whileHover={{ scale: 1.01, y: -1 }}
-                                className="mb-4"
-                            >
-                                <label className="block text-sm font-bold text-gray-800 mb-2 flex items-center">
-                                    <div className="w-4 h-4 bg-gradient-to-br from-purple-500 to-pink-600 rounded flex items-center justify-center mr-2">
-                                        <FileText className="w-2 h-2 text-white" />
-                                    </div>
-                                    Upload true label file (.pt format)
-                                </label>
-                                <div className="relative group">
-                                    <input
-                                        type="file"
-                                        accept=".pt,.pth,.pkl"
-                                        onChange={(e) => {
-                                            const file = e.target.files?.[0];
-                                            if (file) handleImageUpload(file, 'truelabel');
-                                        }}
-                                        className="hidden"
-                                        id="truelabel-upload"
-                                    />
-                                    <label
-                                        htmlFor="truelabel-upload"
-                                        className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-purple-400 rounded-xl bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 hover:from-purple-100 hover:via-pink-100 hover:to-rose-100 cursor-pointer transition-all duration-300 group-hover:border-purple-500 group-hover:shadow-lg relative overflow-hidden transform group-hover:scale-102"
-                                    >
-                                        {trueLabel.file ? (
-                                            <motion.div
-                                                initial={{ scale: 0.8, opacity: 0 }}
-                                                animate={{ scale: 1, opacity: 1 }}
-                                                className="relative w-full h-full z-10 flex items-center justify-center"
-                                            >
-                                                <div className="text-center">
-                                                    <FileText className="w-8 h-8 text-purple-600 mx-auto mb-1" />
-                                                    <p className="text-purple-800 font-bold text-xs truncate max-w-32">
-                                                        {trueLabel.file.name}
-                                                    </p>
-                                                    <p className="text-purple-600 text-xs">Label data loaded</p>
-                                                </div>
-                                            </motion.div>
-                                        ) : (
-                                            <motion.div
-                                                className="flex flex-col items-center z-10"
-                                                whileHover={{ y: -2 }}
-                                            >
-                                                <motion.div
-                                                    whileHover={{ rotate: -5, scale: 1.1 }}
-                                                    className="w-8 h-8 bg-gradient-to-br from-purple-500 via-pink-500 to-rose-600 rounded-lg flex items-center justify-center mb-2 shadow-lg"
-                                                >
-                                                    <FileText className="w-4 h-4 text-white" />
-                                                </motion.div>
-                                                <p className="text-sm font-bold text-purple-800 mb-1">Upload True Label</p>
-                                                <p className="text-purple-700 font-medium text-xs">.pt format (optional)</p>
-                                            </motion.div>
-                                        )}
-                                    </label>
-                                </div>
-                            </motion.div>
-
-                            {/* Analysis Button - Reduced size */}
-                            <motion.button
-                                onClick={runAnalysis}
-                                disabled={(!normalImage.file && !hyperspectralImage.file) || isAnalyzing}
-                                whileHover={{ scale: 1.02, y: -2 }}
-                                whileTap={{ scale: 0.98 }}
-                                className="w-full py-3 px-6 bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 hover:from-emerald-700 hover:via-green-700 hover:to-teal-700 text-white font-bold text-sm rounded-xl shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-3 relative overflow-hidden group border border-white/20"
-                            >
-                                {isAnalyzing ? (
+                                {isGenerating ? (
                                     <>
-                                        <Loader className="w-4 h-4 animate-spin" />
-                                        <span>Running AI Analysis...</span>
+                                        <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent mr-3"></div>
+                                        Processing...
                                     </>
                                 ) : (
                                     <>
-                                        <Brain className="w-4 h-4" />
-                                        <span>Analyze Crop Health</span>
+                                        <Play className="mr-3" size={20} />
+                                        Generate Analysis
                                     </>
                                 )}
-                            </motion.button>
-                        </div>
-                    </motion.div>
-
-                    {/* Results Section - Made more compact */}
-                    <motion.div
-                        initial={{ opacity: 0, x: 30 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.4 }}
-                        className="space-y-4"
-                    >
-                        <div className="bg-white/25 backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-white/40 h-[500px] overflow-hidden">
-                            <div className="text-center mb-4">
-                                <h2 className="text-xl font-bold text-gray-900 mb-1">Analysis Results</h2>
-                                <p className="text-gray-700 text-sm">AI-powered crop health assessment and disease detection</p>
-                            </div>
-
-                            <div className="h-[420px] overflow-y-auto">
-                                <AnimatePresence>
-                                    {isAnalyzing && (
-                                        <motion.div
-                                            initial={{ opacity: 0, scale: 0.9 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            exit={{ opacity: 0, scale: 0.9 }}
-                                            className="bg-white/35 backdrop-blur-sm rounded-2xl shadow-2xl p-6 text-center border-2 border-white/50 relative overflow-hidden"
-                                        >
-                                            <div className="relative z-10">
-                                                <motion.div
-                                                    animate={{ rotate: 360 }}
-                                                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                                                    className="flex justify-center mb-4"
-                                                >
-                                                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl">
-                                                        <Brain className="w-6 h-6 text-white" />
-                                                    </div>
-                                                </motion.div>
-                                                <h3 className="text-lg font-bold text-gray-900 mb-2">Processing Files</h3>
-                                                <p className="text-gray-800 text-sm mb-4 font-medium">AI model analyzing spectral data and vegetation indices...</p>
-                                                <div className="space-y-2">
-                                                    <div className="w-full bg-white/40 rounded-full h-2 overflow-hidden shadow-inner">
-                                                        <motion.div
-                                                            initial={{ width: 0 }}
-                                                            animate={{ width: "100%" }}
-                                                            transition={{ duration: 3, ease: "easeInOut" }}
-                                                            className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-600 h-2 rounded-full shadow-lg"
-                                                        />
-                                                    </div>
-                                                    <p className="text-gray-700 font-medium text-xs">Analyzing spectral signatures and vegetation health...</p>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                    )}
-
-                                    {result && !isAnalyzing && (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 30 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            className="space-y-3"
-                                        >
-                                            {/* Main Result Card - Reduced size */}
-                                            <motion.div
-                                                initial={{ scale: 0.9, rotateY: -15 }}
-                                                animate={{ scale: 1, rotateY: 0 }}
-                                                transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                                                className={`bg-gradient-to-br ${getResultColor(result.class)} rounded-2xl shadow-xl p-4 text-white relative overflow-hidden border border-white/30`}
-                                            >
-                                                <div className="relative z-10">
-                                                    <div className="flex items-center space-x-3 mb-3">
-                                                        <motion.div
-                                                            whileHover={{ scale: 1.1, rotate: 10 }}
-                                                            className="bg-white/25 backdrop-blur-sm p-2 rounded-xl shadow-lg border border-white/30"
-                                                        >
-                                                            {getResultIcon(result.class)}
-                                                        </motion.div>
-                                                        <div className="flex-1">
-                                                            <h3 className="text-lg font-bold capitalize mb-1">
-                                                                {getResultTitle(result.class)}
-                                                            </h3>
-                                                            <div className="flex items-center space-x-2">
-                                                                <p className="text-white/95 text-sm font-semibold">Confidence: {result.confidence.toFixed(1)}%</p>
-                                                                <div className="flex-1 max-w-16 bg-white/25 rounded-full h-1 overflow-hidden">
-                                                                    <motion.div
-                                                                        initial={{ width: 0 }}
-                                                                        animate={{ width: `${result.confidence}%` }}
-                                                                        transition={{ duration: 1.5, delay: 0.5, ease: "easeOut" }}
-                                                                        className="bg-white h-1 rounded-full shadow-sm"
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <p className="text-white/95 text-xs leading-relaxed font-medium">{result.details}</p>
-                                                </div>
-                                            </motion.div>
-
-                                            {/* Classification Breakdown - Reduced size */}
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 20 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: 0.3 }}
-                                                className="bg-white/35 backdrop-blur-sm rounded-2xl shadow-xl p-4 border border-white/50"
-                                            >
-                                                <h4 className="text-sm font-bold text-gray-900 mb-3 text-center flex items-center justify-center">
-                                                    <Target className="w-4 h-4 mr-2 text-emerald-600" />
-                                                    Classification Details
-                                                </h4>
-                                                <div className="space-y-2">
-                                                    <motion.div
-                                                        whileHover={{ scale: 1.02, x: 4 }}
-                                                        className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-emerald-50 via-green-50 to-teal-50 border-2 border-emerald-300 shadow-md hover:shadow-lg transition-all duration-300"
-                                                    >
-                                                        <div className="flex items-center space-x-2">
-                                                            <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
-                                                                <CheckCircle className="w-4 h-4 text-white" />
-                                                            </div>
-                                                            <div>
-                                                                <span className="font-bold text-emerald-900 text-xs">Healthy Crop</span>
-                                                                <p className="text-emerald-800 font-medium text-xs">Normal vegetation indices</p>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex items-center space-x-1">
-                                                            <Activity className="w-3 h-3 text-emerald-600" />
-                                                            <div className="text-emerald-800 font-bold text-xs">Optimal</div>
-                                                        </div>
-                                                    </motion.div>
-
-                                                    <motion.div
-                                                        whileHover={{ scale: 1.02, x: 4 }}
-                                                        className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-red-50 via-rose-50 to-pink-50 border-2 border-red-300 shadow-md hover:shadow-lg transition-all duration-300"
-                                                    >
-                                                        <div className="flex items-center space-x-2">
-                                                            <div className="w-8 h-8 bg-gradient-to-br from-red-500 via-rose-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
-                                                                <AlertTriangle className="w-4 h-4 text-white" />
-                                                            </div>
-                                                            <div>
-                                                                <span className="font-bold text-red-900 text-xs">Rust Disease</span>
-                                                                <p className="text-red-800 font-medium text-xs">Wheat stripe rust detected</p>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex items-center space-x-1">
-                                                            <Zap className="w-3 h-3 text-red-600" />
-                                                            <div className="text-red-800 font-bold text-xs">Action Required</div>
-                                                        </div>
-                                                    </motion.div>
-
-                                                    <motion.div
-                                                        whileHover={{ scale: 1.02, x: 4 }}
-                                                        className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-amber-50 via-orange-50 to-yellow-50 border-2 border-amber-300 shadow-md hover:shadow-lg transition-all duration-300"
-                                                    >
-                                                        <div className="flex items-center space-x-2">
-                                                            <div className="w-8 h-8 bg-gradient-to-br from-amber-500 via-orange-500 to-yellow-600 rounded-xl flex items-center justify-center shadow-lg">
-                                                                <XCircle className="w-4 h-4 text-white" />
-                                                            </div>
-                                                            <div>
-                                                                <span className="font-bold text-amber-900 text-xs">Other Conditions</span>
-                                                                <p className="text-amber-800 font-medium text-xs">Stress, deficiency, etc.</p>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex items-center space-x-1">
-                                                            <Activity className="w-3 h-3 text-amber-600" />
-                                                            <div className="text-amber-800 font-bold text-xs">Monitor</div>
-                                                        </div>
-                                                    </motion.div>
-                                                </div>
-                                            </motion.div>
-                                        </motion.div>
-                                    )}
-
-                                    {!result && !isAnalyzing && (
-                                        <motion.div
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            className="bg-gradient-to-br from-gray-50 via-white to-gray-100 rounded-2xl p-8 text-center border-2 border-dashed border-gray-400 relative overflow-hidden shadow-inner"
-                                        >
-                                            <div className="relative z-10">
-                                                <motion.div
-                                                    animate={{
-                                                        scale: [1, 1.1, 1],
-                                                        rotate: [0, 5, -5, 0]
-                                                    }}
-                                                    transition={{
-                                                        duration: 4,
-                                                        repeat: Infinity,
-                                                        ease: "easeInOut"
-                                                    }}
-                                                    className="w-12 h-12 bg-gradient-to-br from-gray-400 via-gray-500 to-gray-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-xl"
-                                                >
-                                                    <Brain className="w-6 h-6 text-white" />
-                                                </motion.div>
-                                                <h3 className="text-lg font-bold text-gray-800 mb-2">Ready for Analysis</h3>
-                                                <p className="text-gray-700 text-sm font-medium">Upload at least one crop file to begin AI-powered disease detection</p>
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
-                        </div>
-                    </motion.div>
-                </div>
-            </div>
-
-            {/* Footer - Reduced size */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8 }}
-                className="relative z-10 bg-gradient-to-r from-emerald-900 via-green-800 to-teal-900 border-t-2 border-emerald-600/50 mt-12 overflow-hidden"
-            >
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <div className="text-center text-white">
-                        <div className="flex justify-center items-center space-x-3 mb-3">
-                            <motion.div
-                                whileHover={{ scale: 1.1, rotate: 5 }}
-                                className="w-8 h-8 bg-gradient-to-br from-emerald-400 via-green-400 to-teal-500 rounded-xl flex items-center justify-center shadow-lg"
-                            >
-                                <Leaf className="w-4 h-4 text-white" />
-                            </motion.div>
-                            <h3 className="text-lg font-bold">Precision Agriculture AI Platform</h3>
-                        </div>
-                        <p className="text-emerald-100 text-sm mb-2 font-medium">Powered by advanced hyperspectral imaging and deep learning models</p>
-                        <p className="text-emerald-200 font-medium text-sm">Transforming agriculture through AI-driven crop monitoring and early disease detection</p>
-
-                        <div className="flex justify-center items-center space-x-6 mt-4">
-                            <motion.div whileHover={{ scale: 1.1, y: -1 }} className="flex flex-col items-center">
-                                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center mb-1">
-                                    <Brain className="w-3 h-3 text-white" />
-                                </div>
-                                <span className="text-xs text-emerald-200">AI Analysis</span>
-                            </motion.div>
-                            <motion.div whileHover={{ scale: 1.1, y: -1 }} className="flex flex-col items-center">
-                                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center mb-1">
-                                    <Microscope className="w-3 h-3 text-white" />
-                                </div>
-                                <span className="text-xs text-emerald-200">Hyperspectral</span>
-                            </motion.div>
-                            <motion.div whileHover={{ scale: 1.1, y: -1 }} className="flex flex-col items-center">
-                                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center mb-1">
-                                    <Target className="w-3 h-3 text-white" />
-                                </div>
-                                <span className="text-xs text-emerald-200">Precision</span>
-                            </motion.div>
+                            </button>
                         </div>
                     </div>
+
+                    {/* Processing Status */}
+                    {isGenerating && (
+                        <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-l-4 border-blue-400 p-6 mb-8 rounded-r-2xl shadow-lg backdrop-blur-sm">
+                            <div className="flex items-center">
+                                <TrendingUp className="text-blue-500 mr-4" size={28} />
+                                <div>
+                                    <p className="text-blue-800 font-semibold text-lg">AI Analysis in Progress</p>
+                                    <p className="text-blue-600">Processing spectral data and environmental parameters...</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Results Section */}
+                    {showResults && (
+                        <div className="space-y-8">
+                            <div className={`flex justify-between items-center transform transition-all duration-700 ${showResults ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+                                <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent flex items-center">
+                                    <AlertTriangle className="mr-3 text-orange-500" size={32} />
+                                    Pest Risk Analysis Results
+                                </h2>
+                                <button className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-300 flex items-center shadow-lg hover:shadow-xl transform hover:scale-105">
+                                    <Download className="mr-2" size={18} />
+                                    Export Report
+                                </button>
+                            </div>
+
+                            {/* Heatmap Grid */}
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                <HeatmapVisualization
+                                    title="Predicted Presence Probability"
+                                    data={generateHeatmapData()}
+                                    colorClass="bg-gradient-to-br from-blue-400 to-blue-600"
+                                    unit="Pp"
+                                    date="01 January 2022"
+                                />
+                                <HeatmapVisualization
+                                    title="Predicted Presence Probability"
+                                    data={generateHeatmapData()}
+                                    colorClass="bg-gradient-to-br from-blue-400 to-blue-600"
+                                    unit="Pp"
+                                    date="01 April 2022"
+                                />
+                                <HeatmapVisualization
+                                    title="Predicted Presence Probability"
+                                    data={generateHeatmapData()}
+                                    colorClass="bg-gradient-to-br from-blue-400 to-blue-600"
+                                    unit="Pp"
+                                    date="01 September 2022"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                <HeatmapVisualization
+                                    title="Individual EVPN Risk"
+                                    data={generateHeatmapData()}
+                                    colorClass="bg-gradient-to-br from-yellow-400 to-red-500"
+                                    unit="(INR × ha⁻¹ × a⁻¹)"
+                                    date="01 January 2022"
+                                />
+                                <HeatmapVisualization
+                                    title="Individual EVPN Risk"
+                                    data={generateHeatmapData()}
+                                    colorClass="bg-gradient-to-br from-yellow-400 to-red-500"
+                                    unit="(INR × ha⁻¹ × a⁻¹)"
+                                    date="01 April 2022"
+                                />
+                                <HeatmapVisualization
+                                    title="Individual EVPN Risk"
+                                    data={generateHeatmapData()}
+                                    colorClass="bg-gradient-to-br from-yellow-400 to-red-500"
+                                    unit="(INR × ha⁻¹ × a⁻¹)"
+                                    date="01 September 2022"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                <HeatmapVisualization
+                                    title="Treatment Recommendation"
+                                    data={generateHeatmapData()}
+                                    colorClass="bg-gradient-to-br from-purple-500 to-blue-500"
+                                    unit="decision recommendation"
+                                    date="01 January 2022"
+                                />
+                                <HeatmapVisualization
+                                    title="Treatment Recommendation"
+                                    data={generateHeatmapData()}
+                                    colorClass="bg-gradient-to-br from-purple-500 to-blue-500"
+                                    unit="decision recommendation"
+                                    date="01 April 2022"
+                                />
+                                <HeatmapVisualization
+                                    title="Treatment Recommendation"
+                                    data={generateHeatmapData()}
+                                    colorClass="bg-gradient-to-br from-purple-500 to-blue-500"
+                                    unit="decision recommendation"
+                                    date="01 September 2022"
+                                />
+                            </div>
+
+                            {/* Analysis Summary */}
+                            <div className={`bg-gradient-to-r from-white/60 via-green-50/80 to-blue-50/60 backdrop-blur-xl rounded-3xl p-8 border border-white/30 shadow-2xl transform transition-all duration-700 delay-300 ${showResults ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+                                <h3 className="text-2xl font-semibold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-6">Analysis Summary</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="bg-gradient-to-br from-white/80 to-red-50/80 rounded-2xl p-6 shadow-lg backdrop-blur-sm border border-white/30 transform hover:scale-105 transition-all duration-300">
+                                        <h4 className="font-semibold text-gray-800 mb-3 text-lg">High Risk Zones</h4>
+                                        <p className="text-4xl font-bold bg-gradient-to-r from-red-500 to-red-600 bg-clip-text text-transparent">23%</p>
+                                        <p className="text-sm text-gray-600 mt-1">of monitored area</p>
+                                    </div>
+                                    <div className="bg-gradient-to-br from-white/80 to-orange-50/80 rounded-2xl p-6 shadow-lg backdrop-blur-sm border border-white/30 transform hover:scale-105 transition-all duration-300">
+                                        <h4 className="font-semibold text-gray-800 mb-3 text-lg">Treatment Recommended</h4>
+                                        <p className="text-4xl font-bold bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">156</p>
+                                        <p className="text-sm text-gray-600 mt-1">hectares</p>
+                                    </div>
+                                    <div className="bg-gradient-to-br from-white/80 to-green-50/80 rounded-2xl p-6 shadow-lg backdrop-blur-sm border border-white/30 transform hover:scale-105 transition-all duration-300">
+                                        <h4 className="font-semibold text-gray-800 mb-3 text-lg">Confidence Level</h4>
+                                        <p className="text-4xl font-bold bg-gradient-to-r from-green-500 to-green-600 bg-clip-text text-transparent">87%</p>
+                                        <p className="text-sm text-gray-600 mt-1">prediction accuracy</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
-            </motion.div>
+            </div>
         </div>
     );
 };
 
-export default CropDiseaseDetectionPage;
+export default PestControlMonitoring;
