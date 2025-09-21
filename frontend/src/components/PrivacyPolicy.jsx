@@ -7,18 +7,18 @@ const PrivacyPolicy = () => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
+        staggerChildren: 0.05 // Reduced from 0.1
       }
     }
   };
 
   const itemVariants = {
-    hidden: { y: 30, opacity: 0 },
+    hidden: { y: 20, opacity: 0 }, // Reduced from y: 30
     visible: {
       y: 0,
       opacity: 1,
       transition: {
-        duration: 0.6,
+        duration: 0.4, // Reduced from 0.6
         ease: "easeOut"
       }
     }
@@ -30,7 +30,7 @@ const PrivacyPolicy = () => {
       scale: 1,
       rotate: 0,
       transition: {
-        duration: 0.8,
+        duration: 0.5, // Reduced from 0.8
         ease: "easeOut"
       }
     }
@@ -42,7 +42,7 @@ const PrivacyPolicy = () => {
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.3 }}
-      transition={{ delay }}
+      transition={{ delay: delay * 0.3 }} // Reduced delay multiplier
       className="mb-12"
     >
       <motion.div
@@ -62,10 +62,10 @@ const PrivacyPolicy = () => {
       </motion.div>
       <motion.div
         className="ml-16 text-gray-700 leading-relaxed"
-        initial={{ opacity: 0, x: 20 }}
+        initial={{ opacity: 0, x: 15 }} // Reduced from x: 20
         whileInView={{ opacity: 1, x: 0 }}
         viewport={{ once: true }}
-        transition={{ delay: delay + 0.2, duration: 0.6 }}
+        transition={{ delay: delay * 0.3 + 0.1, duration: 0.4 }} // Reduced delays and duration
       >
         {children}
       </motion.div>
@@ -76,9 +76,9 @@ const PrivacyPolicy = () => {
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
       {/* Header */}
       <motion.header
-        initial={{ y: -100, opacity: 0 }}
+        initial={{ y: -50, opacity: 0 }} // Reduced from y: -100
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
+        transition={{ duration: 0.5, ease: "easeOut" }} // Reduced from 0.8
         className="bg-white shadow-lg border-b-4 border-green-500"
       >
         <div className="max-w-6xl mx-auto px-6 py-8">
@@ -86,7 +86,7 @@ const PrivacyPolicy = () => {
             className="flex items-center justify-center mb-4"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ duration: 1, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" }} // Reduced from 1
           >
             <motion.div
               className="mr-4 p-4 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-xl"
@@ -106,9 +106,9 @@ const PrivacyPolicy = () => {
           </motion.div>
           <motion.p
             className="text-center text-gray-600 max-w-3xl mx-auto"
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }} // Reduced from y: 20
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.6 }}
+            transition={{ delay: 0.2, duration: 0.4 }} // Reduced from delay: 0.5, duration: 0.6
           >
             Your privacy and data security are fundamental to our mission of advancing sustainable, precision agriculture through AI-driven insights.
           </motion.p>
@@ -116,7 +116,7 @@ const PrivacyPolicy = () => {
             className="text-center mt-4 text-sm text-gray-500"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.8, duration: 0.6 }}
+            transition={{ delay: 0.3, duration: 0.4 }} // Reduced from delay: 0.8, duration: 0.6
           >
             Last Updated: January 2025
           </motion.div>
@@ -159,7 +159,7 @@ const PrivacyPolicy = () => {
                 <li>• Historical imaging datasets</li>
               </ul>
             </motion.div>
-            
+
             <motion.div
               className="bg-white p-6 rounded-xl shadow-lg border border-gray-200"
               whileHover={{ scale: 1.02, boxShadow: "0 10px 30px rgba(0,0,0,0.1)" }}
@@ -176,7 +176,7 @@ const PrivacyPolicy = () => {
                 <li>• Weather pattern data</li>
               </ul>
             </motion.div>
-            
+
             <motion.div
               className="bg-white p-6 rounded-xl shadow-lg border border-gray-200"
               whileHover={{ scale: 1.02, boxShadow: "0 10px 30px rgba(0,0,0,0.1)" }}
@@ -193,7 +193,7 @@ const PrivacyPolicy = () => {
                 <li>• User preferences and settings</li>
               </ul>
             </motion.div>
-            
+
             <motion.div
               className="bg-white p-6 rounded-xl shadow-lg border border-gray-200"
               whileHover={{ scale: 1.02, boxShadow: "0 10px 30px rgba(0,0,0,0.1)" }}
@@ -222,14 +222,14 @@ const PrivacyPolicy = () => {
                 We use spectral imaging and sensor data to train and improve our LSTM and CNN models for better crop health prediction, soil condition analysis, and pest risk assessment.
               </p>
             </div>
-            
+
             <div className="bg-gradient-to-r from-blue-100 to-cyan-100 p-6 rounded-xl border-l-4 border-blue-500">
               <h3 className="font-semibold text-gray-800 mb-3">Precision Agriculture Insights</h3>
               <p className="text-gray-700">
                 Your data enables us to provide personalized crop monitoring, early disease detection, targeted alerts, and zone-specific recommendations for sustainable farming practices.
               </p>
             </div>
-            
+
             <div className="bg-gradient-to-r from-purple-100 to-indigo-100 p-6 rounded-xl border-l-4 border-purple-500">
               <h3 className="font-semibold text-gray-800 mb-3">Continuous Learning & Localization</h3>
               <p className="text-gray-700">
@@ -286,7 +286,7 @@ const PrivacyPolicy = () => {
                 End-to-end encryption for data transmission and AES-256 encryption for data storage
               </p>
             </motion.div>
-            
+
             <motion.div
               className="text-center p-6 bg-white rounded-xl shadow-lg"
               whileHover={{ y: -5 }}
@@ -298,7 +298,7 @@ const PrivacyPolicy = () => {
                 Multi-factor authentication and role-based access controls for platform security
               </p>
             </motion.div>
-            
+
             <motion.div
               className="text-center p-6 bg-white rounded-xl shadow-lg"
               whileHover={{ y: -5 }}
@@ -365,19 +365,17 @@ const PrivacyPolicy = () => {
           </p>
         </Section>
 
-        
-
         <motion.div
           className="mt-16 p-6 bg-gray-100 rounded-xl border-l-4 border-gray-400"
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.4 }} // Reduced from 0.6
         >
           <h3 className="font-semibold text-gray-800 mb-2">Policy Updates</h3>
           <p className="text-gray-600 text-sm">
-            This Privacy Policy may be updated periodically to reflect changes in our practices or legal requirements. 
-            We will notify users of significant changes through platform notifications and email alerts. 
+            This Privacy Policy may be updated periodically to reflect changes in our practices or legal requirements.
+            We will notify users of significant changes through platform notifications and email alerts.
             Continued use of our services after updates constitutes acceptance of the revised policy.
           </p>
         </motion.div>
