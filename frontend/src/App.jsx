@@ -1,7 +1,5 @@
 import { useState } from 'react'
 import './App.css'
-import Upload from './uploadImage/uplaod'
-import Chatbot from './Chatbot/Chatbutton'
 import { Route, Routes } from 'react-router-dom'
 import HomePage from './pages/HomePage'
 import Footer from './components/Footer'
@@ -11,6 +9,7 @@ import Navbar from './components/Navbar'
 import Signup from './components/Signup'
 import AboutPage from './pages/AboutPage'
 import DashboardPage from './pages/DashboardPage'
+import AgriAi from './pages/AgriAi'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -28,6 +27,7 @@ function App() {
           <Route path='/signup' element={<Signup />} />
           <Route path='/about' element={<AboutPage/>} />
           <Route path='/dashboard' element={<DashboardPage />} />
+          <Route path='/agriai' element={<AgriAi />} />
         </Routes>
         <Footer />
       </div>

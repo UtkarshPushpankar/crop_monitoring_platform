@@ -1,10 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Play, Leaf } from 'lucide-react';
+import { ArrowRight, MessageCircle, Leaf } from 'lucide-react';
 
 const Hero = () => {
   return (
-    <section 
+    <section
       className="relative min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
       style={{
         backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/Background_Image.jpg')`
@@ -13,7 +13,7 @@ const Hero = () => {
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <div className="max-w-5xl mx-auto">
           {/* Badge */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
@@ -23,7 +23,7 @@ const Hero = () => {
             <span className="text-sm font-medium text-emerald-100">AI-Powered Precision Agriculture</span>
           </motion.div>
 
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
@@ -36,7 +36,7 @@ const Hero = () => {
             >
               Smart Crop Monitoring for
             </motion.span>
-            <motion.span 
+            <motion.span
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.6 }}
@@ -45,24 +45,24 @@ const Hero = () => {
               Sustainable Agriculture
             </motion.span>
           </motion.h1>
-          
-          <motion.p 
+
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.8 }}
             className="text-xl md:text-2xl text-gray-200 mb-10 max-w-4xl mx-auto leading-relaxed"
           >
-            Transform your farming with AI-driven insights from hyperspectral imaging and environmental sensors. 
+            Transform your farming with AI-driven insights from hyperspectral imaging and environmental sensors.
             Monitor crop health, predict pest risks, and optimize soil conditions in real-time.
           </motion.p>
-          
-          <motion.div 
+
+          <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 1.0 }}
             className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
           >
-            <motion.button 
+            <motion.button
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
               className="group bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 flex items-center gap-2 shadow-xl hover:shadow-2xl"
@@ -75,30 +75,31 @@ const Hero = () => {
                 <ArrowRight className="w-5 h-5" />
               </motion.div>
             </motion.button>
-            
-            <motion.button 
+
+            <motion.button
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
-              className="group bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white border-2 border-white/30 px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 flex items-center gap-2"
+              onClick={() => window.location.href = '/agriai'}
+              className="group bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white border-2 border-white/30 px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 flex items-center gap-2 cursor-pointer"
             >
-              <Play className="w-5 h-5" />
-              Watch Demo
+              <MessageCircle className="w-5 h-5" />
+              Chat with AgriAI Assistant
             </motion.button>
           </motion.div>
-          
+
           {/* Stats */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 1.2 }}
             className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto"
           >
-            <motion.div 
+            <motion.div
               whileHover={{ scale: 1.05, y: -5 }}
               transition={{ duration: 0.3 }}
               className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300"
             >
-              <motion.div 
+              <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ duration: 0.6, delay: 1.4 }}
@@ -108,13 +109,13 @@ const Hero = () => {
               </motion.div>
               <div className="text-white">Early Detection Rate</div>
             </motion.div>
-            
-            <motion.div 
+
+            <motion.div
               whileHover={{ scale: 1.05, y: -5 }}
               transition={{ duration: 0.3 }}
               className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300"
             >
-              <motion.div 
+              <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ duration: 0.6, delay: 1.6 }}
@@ -124,13 +125,13 @@ const Hero = () => {
               </motion.div>
               <div className="text-white">Yield Improvement</div>
             </motion.div>
-            
-            <motion.div 
+
+            <motion.div
               whileHover={{ scale: 1.05, y: -5 }}
               transition={{ duration: 0.3 }}
               className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300"
             >
-              <motion.div 
+              <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ duration: 0.6, delay: 1.8 }}
@@ -145,7 +146,7 @@ const Hero = () => {
       </div>
 
       {/* Scroll indicator */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1, delay: 2 }}
@@ -155,9 +156,9 @@ const Hero = () => {
           animate={{ y: [0, 10, 0] }}
           transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
         >
-        <div className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center">
-          <div className="w-1 h-3 bg-white/70 rounded-full mt-2 animate-pulse"></div>
-        </div>
+          <div className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center">
+            <div className="w-1 h-3 bg-white/70 rounded-full mt-2 animate-pulse"></div>
+          </div>
         </motion.div>
       </motion.div>
     </section>
