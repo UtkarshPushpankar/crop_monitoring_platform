@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Leaf } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const Signup = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -31,7 +33,7 @@ const Signup = () => {
       return;
     }
     try {
-      const res = await fetch("http://localhost:5000/signup", {
+      const res = await fetch("http://localhost:5000/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -44,8 +46,8 @@ const Signup = () => {
       const data = await res.json();
       if (res.ok) {
         console.log("Signup successfull: ", { name: data.user.name });
-        alert(`Welcome ${data.user.name}! Account created successfully.`);
-        // navigate("/");
+        alert(Welcome ${data.user.name}! Account created successfully.);
+        navigate("/");
       } else {
         alert("Signup failed");
       }
@@ -53,6 +55,15 @@ const Signup = () => {
       console.error("Error:", err);
       alert("Server error");
     }
+  };
+
+  const handleGoogleLogin = () => {
+    window.location.href = "http://localhost:5000/auth/google?redirect=/";
+  };
+
+  // For Microsoft login
+  const handleMicrosoftLogin = () => {
+    window.location.href = "http://localhost:5000/auth/microsoft?redirect=/";
   };
 
   return (
@@ -78,8 +89,8 @@ const Signup = () => {
         <div className="max-w-4xl w-full grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
 
           {/* Left Side - Signup Form */}
-          <div className={`bg-white/20 backdrop-blur-sm rounded-2xl shadow-xl p-6 lg:p-8 transform transition-all duration-700 ${isLoaded ? 'translate-x-0 opacity-100' : '-translate-x-8 opacity-0'}`}>
-            <h1 className={`text-2xl lg:text-3xl font-bold text-gray-900 mb-6 transition-all duration-500 delay-200 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>Get Started Now</h1>
+          <div className={bg-white/20 backdrop-blur-sm rounded-2xl shadow-xl p-6 lg:p-8 transform transition-all duration-700 ${isLoaded ? 'translate-x-0 opacity-100' : '-translate-x-8 opacity-0'}}>
+            <h1 className={text-2xl lg:text-3xl font-bold text-gray-900 mb-6 transition-all duration-500 delay-200 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}}>Get Started Now</h1>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Name Field */}
@@ -171,7 +182,9 @@ const Signup = () => {
               <div className="space-y-2">
                 <button
                   type="button"
-                  className="w-full flex items-center justify-center px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                  className="w-full flex   cursor-pointer items-center justify-center px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                  onClick={handleGoogleLogin}
+
                 >
                   <svg className="w-4 h-4 mr-3" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -184,12 +197,11 @@ const Signup = () => {
 
                 <button
                   type="button"
-                  className="w-full flex items-center justify-center px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                  className="w-full flex items-center cursor-pointer justify-center px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                  onClick={handleMicrosoftLogin}
                 >
-                  <svg className="w-4 h-4 mr-3" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
-                  </svg>
-                  Sign in with Apple
+                  <img src="https://cdn-icons-png.flaticon.com/128/732/732221.png" className='w-[20px] h-[20px] mr-3' ></img>
+                  Sign in with microsoft
                 </button>
               </div>
 
@@ -220,26 +232,26 @@ const Signup = () => {
               </h2>
             </div>
             {/* Illustration Area */}
-            <div className={`relative p-8 transition-all duration-700 delay-200 ${isLoaded ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
+            <div className={relative p-8 transition-all duration-700 delay-200 ${isLoaded ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}}>
               {/* Floating particles */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 {[...Array(6)].map((_, i) => (
                   <div
                     key={i}
-                    className={`absolute w-2 h-2 bg-green-300 rounded-full opacity-30 animate-bounce transform transition-all duration-500 ${isLoaded ? 'scale-100 opacity-30' : 'scale-0 opacity-0'}`}
+                    className={absolute w-2 h-2 bg-green-300 rounded-full opacity-30 animate-bounce transform transition-all duration-500 ${isLoaded ? 'scale-100 opacity-30' : 'scale-0 opacity-0'}}
                     style={{
-                      left: `${20 + i * 15}%`,
-                      top: `${10 + (i % 3) * 30}%`,
-                      animationDelay: `${i * 0.5}s`,
-                      animationDuration: `${2 + i * 0.3}s`,
-                      transitionDelay: `${1000 + i * 100}ms`
+                      left: ${20 + i * 15}%,
+                      top: ${10 + (i % 3) * 30}%,
+                      animationDelay: ${i * 0.5}s,
+                      animationDuration: ${2 + i * 0.3}s,
+                      transitionDelay: ${1000 + i * 100}ms
                     }}
                   />
                 ))}
               </div>
 
               {/* Main monitor card */}
-              <div className={`relative group transform transition-all duration-800 ${isLoaded ? 'scale-100 opacity-100 rotate-0' : 'scale-90 opacity-0 rotate-3'}`} style={{ transitionDelay: '600ms' }}>
+              <div className={relative group transform transition-all duration-800 ${isLoaded ? 'scale-100 opacity-100 rotate-0' : 'scale-90 opacity-0 rotate-3'}} style={{ transitionDelay: '600ms' }}>
                 {/* Outer glow effect */}
                 <div className="absolute -inset-4 bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 rounded-3xl opacity-20 blur-xl group-hover:opacity-40 transition-opacity duration-500" />
 
@@ -250,25 +262,25 @@ const Signup = () => {
                   <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 transform transition-all duration-300 -rotate-1 group-hover:rotate-0 group-hover:scale-102">
 
                     {/* Header with animated logo */}
-                    <div className={`flex items-center justify-center space-x-4 mb-6 transform transition-all duration-600 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`} style={{ transitionDelay: '700ms' }}>
+                    <div className={flex items-center justify-center space-x-4 mb-6 transform transition-all duration-600 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}} style={{ transitionDelay: '700ms' }}>
                       <div className="relative">
-                        <div className={`w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center shadow-lg group-hover:shadow-green-300/50 transition-all duration-500 ${isLoaded ? 'scale-100 rotate-0' : 'scale-0 rotate-180'}`} style={{ transitionDelay: '1200ms' }}>
+                        <div className={w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center shadow-lg group-hover:shadow-green-300/50 transition-all duration-500 ${isLoaded ? 'scale-100 rotate-0' : 'scale-0 rotate-180'}} style={{ transitionDelay: '1200ms' }}>
                           <Leaf className="w-6 h-6 text-white transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110" />
                         </div>
                         {/* Pulsing ring */}
-                        <div className={`absolute inset-0 rounded-full border-2 border-green-400 animate-ping opacity-30 transition-all duration-300 ${isLoaded ? 'opacity-30' : 'opacity-0'}`} style={{ transitionDelay: '900ms' }} />
+                        <div className={absolute inset-0 rounded-full border-2 border-green-400 animate-ping opacity-30 transition-all duration-300 ${isLoaded ? 'opacity-30' : 'opacity-0'}} style={{ transitionDelay: '900ms' }} />
                       </div>
 
-                      <div className={`text-left transform transition-all duration-500 ${isLoaded ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'}`} style={{ transitionDelay: '1300ms' }}>
+                      <div className={text-left transform transition-all duration-500 ${isLoaded ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'}} style={{ transitionDelay: '1300ms' }}>
                         <div className="font-bold text-green-600 text-lg tracking-wide">AI Monitor</div>
                         <div className="text-xs text-gray-500 uppercase tracking-widest">Crop Intelligence</div>
                       </div>
                     </div>
 
                     {/* Metrics grid with enhanced animations */}
-                    <div className={`grid grid-cols-3 gap-3 mb-6 transform transition-all duration-600 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}`} style={{ transitionDelay: '1000ms' }}>
+                    <div className={grid grid-cols-3 gap-3 mb-6 transform transition-all duration-600 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}} style={{ transitionDelay: '1000ms' }}>
                       {/* Healthy Status */}
-                      <div className={`bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-3 text-center transform transition-all duration-500 hover:scale-102 ${isLoaded ? 'scale-100 opacity-100' : 'scale-90 opacity-0'}`} style={{ transitionDelay: '900ms' }}>
+                      <div className={bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-3 text-center transform transition-all duration-500 hover:scale-102 ${isLoaded ? 'scale-100 opacity-100' : 'scale-90 opacity-0'}} style={{ transitionDelay: '900ms' }}>
                         <div className="relative">
                           <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-green-600 rounded-full mx-auto mb-2 flex items-center justify-center shadow-md">
                             <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -281,7 +293,7 @@ const Signup = () => {
                       </div>
 
                       {/* Soil pH */}
-                      <div className={`bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-3 text-center transform transition-all duration-500 hover:scale-102 ${isLoaded ? 'scale-100 opacity-100' : 'scale-90 opacity-0'}`} style={{ transitionDelay: '1100ms' }}>
+                      <div className={bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-3 text-center transform transition-all duration-500 hover:scale-102 ${isLoaded ? 'scale-100 opacity-100' : 'scale-90 opacity-0'}} style={{ transitionDelay: '1100ms' }}>
                         <div className="relative">
                           <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full mx-auto mb-2 flex items-center justify-center shadow-md">
                             <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -294,7 +306,7 @@ const Signup = () => {
                       </div>
 
                       {/* Pest Risk */}
-                      <div className={`bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-3 text-center transform transition-all duration-500 hover:scale-102 ${isLoaded ? 'scale-100 opacity-100' : 'scale-90 opacity-0'}`} style={{ transitionDelay: '1200ms' }}>
+                      <div className={bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-3 text-center transform transition-all duration-500 hover:scale-102 ${isLoaded ? 'scale-100 opacity-100' : 'scale-90 opacity-0'}} style={{ transitionDelay: '1200ms' }}>
                         <div className="relative">
                           <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full mx-auto mb-2 flex items-center justify-center shadow-md">
                             <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -308,14 +320,14 @@ const Signup = () => {
                     </div>
 
                     {/* Enhanced status indicators */}
-                    <div className={`flex justify-center items-center space-x-3 mb-4 transform transition-all duration-600 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`} style={{ transitionDelay: '1300ms' }}>
+                    <div className={flex justify-center items-center space-x-3 mb-4 transform transition-all duration-600 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}} style={{ transitionDelay: '1300ms' }}>
                       {[
                         { color: 'green', bgColor: 'bg-gradient-to-br from-green-400 to-green-600' },
                         { color: 'blue', bgColor: 'bg-gradient-to-br from-blue-400 to-blue-600' },
                         { color: 'yellow', bgColor: 'bg-gradient-to-br from-yellow-400 to-yellow-600' }
                       ].map((item, index) => (
                         <div key={index} className="relative group/indicator">
-                          <div className={`w-8 h-8 ${item.bgColor} rounded-full flex items-center justify-center shadow-lg hover:shadow-${item.color}-300/50 transition-all duration-500 cursor-pointer transform hover:scale-110 ${isLoaded ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}`} style={{ transitionDelay: `${1300 + index * 100}ms` }}>
+                          <div className={w-8 h-8 ${item.bgColor} rounded-full flex items-center justify-center shadow-lg hover:shadow-${item.color}-300/50 transition-all duration-500 cursor-pointer transform hover:scale-110 ${isLoaded ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}} style={{ transitionDelay: ${1300 + index * 100}ms }}>
                             <div className="w-2 h-2 bg-white rounded-full" />
                           </div>
                           <div className="absolute inset-0 rounded-full border-2 border-current opacity-0 group-hover/indicator:opacity-30 group-hover/indicator:animate-ping transition-opacity" />
@@ -334,7 +346,7 @@ const Signup = () => {
                 </div>
 
                 {/* Floating info cards */}
-                <div className={`absolute -top-4 -right-4 bg-white rounded-lg p-2 shadow-lg transform transition-all duration-500 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 ${isLoaded ? 'scale-100' : 'scale-0'}`} style={{ transitionDelay: '1500ms' }}>
+                <div className={absolute -top-4 -right-4 bg-white rounded-lg p-2 shadow-lg transform transition-all duration-500 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 ${isLoaded ? 'scale-100' : 'scale-0'}} style={{ transitionDelay: '1500ms' }}>
                   <div className="flex items-center space-x-2">
                     <svg className="w-4 h-4 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
@@ -343,7 +355,7 @@ const Signup = () => {
                   </div>
                 </div>
 
-                <div className={`absolute -bottom-4 -left-4 bg-white rounded-lg p-2 shadow-lg transform transition-all duration-500 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 ${isLoaded ? 'scale-100' : 'scale-0'}`} style={{ transitionDelay: '1600ms' }}>
+                <div className={absolute -bottom-4 -left-4 bg-white rounded-lg p-2 shadow-lg transform transition-all duration-500 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 ${isLoaded ? 'scale-100' : 'scale-0'}} style={{ transitionDelay: '1600ms' }}>
                   <div className="flex items-center space-x-2">
                     <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z" />
