@@ -39,7 +39,7 @@ const Navbar = () => {
                   <Leaf className="h-6 w-6 text-white" />
                 </div>
                 <span className="ml-2 text-2xl font-bold text-gray-900">
-                  फसलSaathi
+                  AgriConnect
                 </span>
               </div>
             </div>
@@ -74,11 +74,6 @@ const Navbar = () => {
               {/* Search Icon */}
               <button className="p-3 text-gray-600 hover:text-emerald-600 hover:bg-white/50 rounded-lg transition-all duration-300 backdrop-blur-sm">
                 <Search className="h-5 w-5" />
-              </button>
-
-              {/* Shopping Cart Icon */}
-              <button className="p-3 text-gray-600 hover:text-emerald-600 hover:bg-white/50 rounded-lg transition-all duration-300 backdrop-blur-sm">
-                <ShoppingCart className="h-5 w-5" />
               </button>
 
               {/* Call Button */}
