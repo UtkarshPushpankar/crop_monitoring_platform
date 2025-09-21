@@ -3,3 +3,11 @@ dotenv
 flask_cors
 langchain
 langchain_google_genai
+Flask==2.3.3
+Flask-CORS==4.0.0
+torch
+torchvision
+timm
+Pillow
+numpy
+scipy

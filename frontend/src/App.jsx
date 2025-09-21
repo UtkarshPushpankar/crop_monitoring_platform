@@ -13,6 +13,7 @@ import Contact from './components/Contact'
 import PrivacyPolicy from './components/PrivacyPolicy'
 import CropDiseaseDetection from './pages/CropDiseaseDetection'
 import AgriTools from './components/AgriTools'
+import PestControlMonitoring from './components/PestControlPage'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -41,6 +42,7 @@ function App() {
           <Route path='/privacypolicy' element={<PrivacyPolicy />}/>
           <Route path='/crop-disease-detection' element={<CropDiseaseDetection />}/>
           <Route path='/agritools' element={<AgriTools />}/>
+          <Route path='/pest-control' element={<PestControlMonitoring />}/>
 
         </Routes>
 
