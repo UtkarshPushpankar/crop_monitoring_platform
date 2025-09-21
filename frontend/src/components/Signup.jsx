@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Leaf } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 
 const Signup = () => {
+  const navigate=useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -17,10 +18,36 @@ const Signup = () => {
       [name]: type === 'checkbox' ? checked : value
     }));
   };
-
-  const handleSubmit = (e) => {
+  
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    if (!formData.email || !formData.password || !formData.name) {
+      alert("Please fill in all fields");
+      return;
+    }
+    try {
+      const res = await fetch("http://localhost:5000/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        console.log("Signup successfull: ", { name: data.user.name });
+        alert(`Welcome ${data.user.name}! Account created successfully.`);
+        navigate("/");
+      } else {
+        alert("Signup failed");
+      }
+    } catch (err) {
+      console.error("Error:", err);
+      alert("Server error");
+    }
   };
 
   return (

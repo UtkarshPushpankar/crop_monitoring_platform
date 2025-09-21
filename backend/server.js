@@ -1,14 +1,21 @@
 require("dotenv").config();
 const express=require("express")
 const app=express();
+const cors = require('cors');
 const mongoose = require("mongoose");
 const PORT=process.env.PORT
 const authRouter=require("./routes/auth")
 const verifyUser=require("./middleware/authMiddleware.js")
 
-
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:3000'], // Multiple origins
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use("/",authRouter);
+
 
 app.post("/logout", (req, res) => {
   console.log("🔥 Logout route hit!");
