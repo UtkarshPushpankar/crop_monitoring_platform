@@ -1,15 +1,23 @@
 import React, { useState } from 'react';
 import { Search, ShoppingCart, Leaf, Phone, Menu, X } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
+  const navigate=useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activeItem, setActiveItem] = useState('Home');
 
   const navItems = [
     { name: 'Home', href: '/', active: true },
     { name: 'About', href: '/about', active: false },
-    { name: 'Dashboard', href: '/dashboard', active: false },
+    { name: 'Products', href: '#', active: false },
     { name: 'Projects', href: '#', active: false },
   ];
+
+  const handleNavClick = (itemName) => {
+    setActiveItem(itemName);
+    setIsMobileMenuOpen(false); 
+  }
 
   return (
     <div className="bg-gradient-to-r from-emerald-50 via-green-50 to-teal-50">
@@ -25,7 +33,7 @@ const Navbar = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative flex justify-between items-center h-20">
             {/* Logo */}
-            <div className="flex items-center">
+            <div className="flex items-center cursor-pointer" onClick={()=>navigate("/")}>
               <div className="flex-shrink-0 flex items-center">
                 <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-green-500 rounded-xl flex items-center justify-center shadow-lg">
                   <Leaf className="h-6 w-6 text-white" />
@@ -39,21 +47,24 @@ const Navbar = () => {
             {/* Desktop Navigation */}
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-8">
-                {navItems.map((item) => (
-                  <a
-                    key={item.name}
-                    href={item.href}
-                    className={`px-4 py-2 text-base font-medium transition-all duration-300 relative rounded-lg hover:bg-white/50 backdrop-blur-sm ${
-                      item.active
+                {navItems.map((item,key) => (
+                  <Link
+                    key={key}
+                    to={item.href}
+                    onClick={(e) => {
+                      handleNavClick(item.name);
+                    }}
+                    className={`px-4 py-2 text-base font-medium transition-all duration-300 relative rounded-lg hover:bg-white/50 backdrop-blur-sm cursor-pointer ${
+                      activeItem === item.name
                         ? 'text-emerald-700 bg-white/30 shadow-sm'
                         : 'text-gray-700 hover:text-emerald-700'
                     }`}
                   >
                     {item.name}
-                    {item.active && (
+                    {activeItem === item.name && (
                       <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-400 to-green-400 rounded-full"></div>
                     )}
-                  </a>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -104,17 +115,19 @@ const Navbar = () => {
           <div className="md:hidden bg-gradient-to-r from-white/95 via-emerald-50/95 to-green-50/95 border-t border-emerald-100 backdrop-blur-sm">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
               {navItems.map((item) => (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  className={`block px-4 py-3 text-base font-medium transition-all duration-300 rounded-lg ${
-                    item.active
+                <Link
+                  to={item.name}
+                  onClick={(e) => {
+                    handleNavClick(item.name);
+                  }}
+                  className={`block px-4 py-3 text-base font-medium transition-all duration-300 rounded-lg cursor-pointer ${
+                    activeItem === item.name
                       ? 'text-emerald-700 bg-white/50 shadow-sm'
                       : 'text-gray-700 hover:text-emerald-700 hover:bg-white/30'
                   }`}
                 >
                   {item.name}
-                </a>
+                </Link>
               ))}
               
               {/* Mobile Icons */}

@@ -19,7 +19,13 @@ router.post("/signup", async (req, res) => {
     const user = new User({ name, email, password: hashedPassword });
     await user.save();
 
-    return res.status(201).json({ message: "User created" });
+    return res.status(201).json({ message: "User created" ,
+       user: {
+        name: user.name,
+        email: user.email,
+        id: user._id
+      }}
+    );
   } catch (err) {
     console.error("Signup error:", err);
     return res.status(500).json({ message: "Server error" });
