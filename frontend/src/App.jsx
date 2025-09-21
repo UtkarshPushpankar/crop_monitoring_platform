@@ -10,6 +10,7 @@ import Signup from './components/Signup'
 import AboutPage from './pages/AboutPage'
 import DashboardPage from './pages/DashboardPage'
 import AgriAi from './pages/AgriAi'
+import Contact from './components/Contact'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -28,6 +29,7 @@ function App() {
           <Route path='/about' element={<AboutPage/>} />
           <Route path='/dashboard' element={<DashboardPage />} />
           <Route path='/agriai' element={<AgriAi />} />
+          <Route path='/contact' element={<Contact />}/>
         </Routes>
         <Footer />
       </div>
