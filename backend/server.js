@@ -32,6 +32,8 @@ app.get("/verify-user", verifyUser, (req, res) => {
   res.json({ message: "User verified", name: req.user.name });
 });
 
+
+
 app.listen(PORT,()=>
     { console.log(`Server started on ${PORT}`)
 })
@@ -39,6 +41,7 @@ app.listen(PORT,()=>
 app.get("/health", (req, res) => {
   res.json({ status: "OK" });
 });
+
 
 
 mongoose
