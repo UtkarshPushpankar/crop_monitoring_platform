@@ -1,24 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Leaf, 
-  Bug, 
-  MapPin, 
-  Thermometer,
-  Camera,
-  Shield,
-  Globe,
-  Activity,
-  ArrowRight,
-  Sparkles
-} from 'lucide-react';
+import { Leaf, Bug, MapPin, Thermometer, Camera, Shield, Globe, Activity, ArrowRight, Sparkles } from 'lucide-react';
+import { AuthContext } from '../context/authcontext';
+import { useNavigate } from 'react-router-dom';
 
 const AgriTools = () => {
+  const navigate = useNavigate();
   const [isLoaded, setIsLoaded] = useState(false);
 
+  const { isLoggedIn } = useContext(AuthContext);
   useEffect(() => {
-    setIsLoaded(true);
+    if (isLoggedIn) {
+      setIsLoaded(true);
+    } else {
+      navigate("/login");
+    }
   }, []);
+
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -45,8 +43,8 @@ const AgriTools = () => {
 
   const cardHoverVariants = {
     rest: { scale: 1, y: 0 },
-    hover: { 
-      scale: 1.03, 
+    hover: {
+      scale: 1.03,
       y: -8,
       transition: {
         duration: 0.3,
@@ -92,7 +90,7 @@ const AgriTools = () => {
     {
       id: 4,
       title: "Soil & Environmental Monitor",
-      description: "Comprehensive monitoring of soil moisture, pH levels, temperature, humidity, and nutrient content using IoT sensors and satellite data.",
+      description: "Comprehensive monitoring of soil moisture, pH levels, temperature, humidity, soil and crop nutrient content using IoT sensors and satellite data.",
       icon: Thermometer,
       gradient: "from-violet-400 via-purple-500 to-indigo-600",
       bgGradient: "from-violet-50 to-purple-100",
@@ -107,22 +105,22 @@ const AgriTools = () => {
       {/* Animated Background Pattern */}
       <div className="absolute inset-0 overflow-hidden">
         {/* Top Wave */}
-        <motion.div 
+        <motion.div
           className="absolute top-0 left-0 w-full"
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 1, ease: "easeOut" }}
         >
           <svg className="w-full h-32" viewBox="0 0 1440 160" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-            <motion.path 
-              d="M0,0 C240,80 480,80 720,40 C960,0 1200,0 1440,40 L1440,0 L0,0 Z" 
+            <motion.path
+              d="M0,0 C240,80 480,80 720,40 C960,0 1200,0 1440,40 L1440,0 L0,0 Z"
               fill="rgba(16, 185, 129, 0.4)"
               initial={{ pathLength: 0 }}
               animate={{ pathLength: 1 }}
               transition={{ duration: 2, ease: "easeInOut" }}
             />
-            <motion.path 
-              d="M0,20 C240,100 480,100 720,60 C960,20 1200,20 1440,60 L1440,0 L0,0 Z" 
+            <motion.path
+              d="M0,20 C240,100 480,100 720,60 C960,20 1200,20 1440,60 L1440,0 L0,0 Z"
               fill="rgba(16, 185, 129, 0.2)"
               initial={{ pathLength: 0 }}
               animate={{ pathLength: 1 }}
@@ -132,15 +130,15 @@ const AgriTools = () => {
         </motion.div>
 
         {/* Bottom Wave */}
-        <motion.div 
+        <motion.div
           className="absolute bottom-0 left-0 w-full"
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 1, delay: 0.5, ease: "easeOut" }}
         >
           <svg className="w-full h-32" viewBox="0 0 1440 160" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-            <motion.path 
-              d="M0,160L48,144C96,128,192,96,288,96C384,96,480,128,576,133.3C672,139,768,117,864,112C960,107,1056,117,1152,128C1248,139,1344,149,1392,154.7L1440,160L1440,160L1392,160C1344,160,1248,160,1152,160C1056,160,960,160,864,160C768,160,672,160,576,160C480,160,384,160,288,160C192,160,96,160,48,160L0,160Z" 
+            <motion.path
+              d="M0,160L48,144C96,128,192,96,288,96C384,96,480,128,576,133.3C672,139,768,117,864,112C960,107,1056,117,1152,128C1248,139,1344,149,1392,154.7L1440,160L1440,160L1392,160C1344,160,1248,160,1152,160C1056,160,960,160,864,160C768,160,672,160,576,160C480,160,384,160,288,160C192,160,96,160,48,160L0,160Z"
               fill="rgba(13, 148, 136, 0.3)"
               initial={{ pathLength: 0 }}
               animate={{ pathLength: 1 }}
@@ -154,12 +152,12 @@ const AgriTools = () => {
           <motion.div
             key={i}
             className="absolute w-2 h-2 bg-green-400 rounded-full opacity-40"
-            initial={{ 
+            initial={{
               x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
               y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 800),
               scale: 0
             }}
-            animate={{ 
+            animate={{
               y: [null, -20, 0, -10, 0],
               scale: [0, 1, 0.8, 1, 0.9],
               opacity: [0, 0.6, 0.3, 0.6, 0.4]
@@ -181,13 +179,13 @@ const AgriTools = () => {
       {/* Main Content */}
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Header Section */}
-        <motion.div 
+        <motion.div
           className="text-center py-16 px-4"
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
-          <motion.div 
+          <motion.div
             className="flex items-center justify-center space-x-4 mb-8"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -197,14 +195,14 @@ const AgriTools = () => {
               <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-green-600 rounded-full flex items-center justify-center shadow-2xl">
                 <Leaf className="w-8 h-8 text-white" />
               </div>
-              <motion.div 
+              <motion.div
                 className="absolute inset-0 rounded-full border-4 border-green-400 opacity-30"
                 animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0, 0.3] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
               />
             </div>
             <div>
-              <motion.h1 
+              <motion.h1
                 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-green-700 via-emerald-600 to-teal-700 bg-clip-text text-transparent"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -212,7 +210,7 @@ const AgriTools = () => {
               >
                 AgriConnect
               </motion.h1>
-              <motion.p 
+              <motion.p
                 className="text-lg text-gray-600 font-medium"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -232,7 +230,7 @@ const AgriTools = () => {
               Transform Your Farming with AI-Powered Insights
             </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Leverage cutting-edge hyperspectral imaging, machine learning, and IoT sensors to monitor crop health, 
+              Leverage cutting-edge hyperspectral imaging, machine learning, and IoT sensors to monitor crop health,
               detect pests, assess risks, and optimize your agricultural operations in real-time.
             </p>
           </motion.div>
@@ -261,7 +259,7 @@ const AgriTools = () => {
                     whileTap={{ scale: 0.98 }}
                   >
                     {/* Glow Effect */}
-                    <motion.div 
+                    <motion.div
                       className={`absolute -inset-1 bg-gradient-to-r ${feature.gradient} rounded-3xl opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-500`}
                     />
 
@@ -270,7 +268,7 @@ const AgriTools = () => {
 
                       {/* Header */}
                       <div className="flex items-start space-x-6 mb-6">
-                        <motion.div 
+                        <motion.div
                           className={`w-16 h-16 bg-gradient-to-br ${feature.iconBg} rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-2xl transition-all duration-300`}
                           whileHover={{ rotate: 5, scale: 1.05 }}
                         >
@@ -296,7 +294,7 @@ const AgriTools = () => {
                       {/* Features List */}
                       <div className="space-y-3 mb-8">
                         {feature.features.map((item, idx) => (
-                          <motion.div 
+                          <motion.div
                             key={idx}
                             className="flex items-center space-x-3"
                             initial={{ opacity: 0, x: -10 }}
@@ -311,7 +309,7 @@ const AgriTools = () => {
 
                       {/* Action Button */}
                       <motion.button
-                        className={`w-full bg-gradient-to-r ${feature.gradient} text-white font-semibold py-4 px-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 flex items-center justify-center space-x-3 group/btn relative overflow-hidden`}
+                        className={`w-full cursor-pointer bg-gradient-to-r ${feature.gradient} text-white font-semibold py-4 px-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 flex items-center justify-center space-x-3 group/btn relative overflow-hidden`}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
@@ -325,7 +323,7 @@ const AgriTools = () => {
                         </motion.div>
 
                         {/* Button Shine Effect */}
-                        <motion.div 
+                        <motion.div
                           className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full"
                           whileHover={{ x: "200%" }}
                           transition={{ duration: 0.6 }}
@@ -339,42 +337,7 @@ const AgriTools = () => {
           </motion.div>
         </div>
 
-        {/* Bottom CTA Section */}
-        <motion.div 
-          className="text-center py-12 px-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 1.5 }}
-        >
-          <div className="max-w-4xl mx-auto">
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">
-              Ready to revolutionize your farming operations?
-            </h3>
-            <p className="text-gray-600 mb-8">
-              Join thousands of farmers already using AI-powered insights to maximize yields and reduce risks.
-            </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <motion.button
-                className="bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold py-4 px-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 flex items-center space-x-3"
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Activity className="w-5 h-5" />
-                <span>Start Free Trial</span>
-              </motion.button>
-
-              <motion.button
-                className="bg-white/80 backdrop-blur-lg text-gray-700 font-semibold py-4 px-8 rounded-2xl shadow-lg hover:shadow-xl border border-gray-200 transition-all duration-300 flex items-center space-x-3"
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Globe className="w-5 h-5" />
-                <span>Schedule Demo</span>
-              </motion.button>
-            </div>
-          </div>
-        </motion.div>
       </div>
     </div>
   );

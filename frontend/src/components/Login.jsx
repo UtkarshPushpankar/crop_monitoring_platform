@@ -1,4 +1,3 @@
-
 import React, { useState , useEffect, useContext} from 'react';
 import { Leaf } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -8,7 +7,6 @@ import { AuthContext } from "../context/authcontext.jsx"
 const Login = () => {
   const navigate=useNavigate();
   const {login}=useContext(AuthContext);
-import React, { useState, useEffect } from 'react';
   const [formData, setFormData] = useState({
     email: '',
     password: '',

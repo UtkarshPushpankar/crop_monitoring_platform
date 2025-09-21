@@ -20,7 +20,6 @@ app.use(express.json());
 
 app.use("/",authRouter);
 app.use(cookieParser());
-
 app.use("/auth",authRouter);
 
 
@@ -40,7 +39,7 @@ app.get("/verify-user", verifyUser, (req, res) => {
 });
 
 app.listen(PORT,()=>
-    { console.log(Server started on ${PORT})
+    { console.log(`Server started on ${PORT}`)
 })
 
 app.get("/health", (req, res) => {
