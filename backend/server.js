@@ -8,6 +8,8 @@ const PORT=process.env.PORT
 const authRouter=require("./routes/auth")
 const verifyUser=require("./middleware/authmiddleware.js")
 
+require("./config/passport"); 
+
 app.use(cors({
   origin: ['http://localhost:5173', 'http://localhost:3000'], // Multiple origins
   credentials: true,
@@ -15,8 +17,11 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
+
 app.use("/",authRouter);
 app.use(cookieParser());
+
+app.use("/auth",authRouter);
 
 
 app.post("/logout", (req, res) => {
@@ -35,7 +40,7 @@ app.get("/verify-user", verifyUser, (req, res) => {
 });
 
 app.listen(PORT,()=>
-    { console.log(`Server started on ${PORT}`)
+    { console.log(Server started on ${PORT})
 })
 
 app.get("/health", (req, res) => {
