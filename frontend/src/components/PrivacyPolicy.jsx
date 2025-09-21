@@ -367,7 +367,6 @@ const PrivacyPolicy = () => {
 
         
 
-        {/* Updates Notice */}
         <motion.div
           className="mt-16 p-6 bg-gray-100 rounded-xl border-l-4 border-gray-400"
           initial={{ opacity: 0, scale: 0.95 }}
