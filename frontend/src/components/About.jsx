@@ -2,7 +2,7 @@ import React from "react";
 import { Leaf, Cpu, BarChart3, AlertTriangle, Users, Globe } from "lucide-react";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
-
+import Chatbot from "../Chatbot/Chatbutton";
 const About = () => {
     const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.2});
     
