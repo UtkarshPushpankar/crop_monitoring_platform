@@ -1,9 +1,14 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState , useEffect, useContext} from 'react';
 import { Leaf } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from "../context/authcontext.jsx"
+
 const Login = () => {
-  const navigate = useNavigate();
+  const navigate=useNavigate();
+  const {login}=useContext(AuthContext);
+import React, { useState, useEffect } from 'react';
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -42,7 +47,8 @@ const Login = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        console.log("Login successfull: ", { name: data.user.name });
+        console.log("Login successfull: ", { name: data.user.name, email:data.user.email});
+        login({name:data.user.name , email:data.user.email})
         navigate("/");
       } else {
         alert("Login failed");
