@@ -11,6 +11,7 @@ import AboutPage from './pages/AboutPage'
 import DashboardPage from './pages/DashboardPage'
 import AgriAi from './pages/AgriAi'
 import Contact from './components/Contact'
+import PrivacyPolicy from './components/PrivacyPolicy'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -30,6 +31,7 @@ function App() {
           <Route path='/dashboard' element={<DashboardPage />} />
           <Route path='/agriai' element={<AgriAi />} />
           <Route path='/contact' element={<Contact />}/>
+          <Route path='/privacypolicy' element={<PrivacyPolicy />}/>
         </Routes>
         <Footer />
       </div>
