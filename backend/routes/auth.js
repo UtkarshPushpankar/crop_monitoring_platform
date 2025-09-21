@@ -3,6 +3,8 @@ const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
+const verifyUser = require("../middleware/authmiddleware");
+console.log('Auth router loaded');
 const passport = require("passport");
 
 // Helper function
