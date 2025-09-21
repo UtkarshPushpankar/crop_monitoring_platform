@@ -45,14 +45,14 @@ const ProblemSolution = () => {
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.5 }}
           viewport={{ once: true }}
           className="text-center mb-16"
         >
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
             viewport={{ once: true }}
             className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent mb-4"
           >
@@ -61,7 +61,7 @@ const ProblemSolution = () => {
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
             viewport={{ once: true }}
             className="text-xl text-gray-600 max-w-3xl mx-auto"
           >
@@ -74,13 +74,13 @@ const ProblemSolution = () => {
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
             viewport={{ once: true }}
           >
             <motion.h3 
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
+              transition={{ duration: 0.4, delay: 0.15 }}
               viewport={{ once: true }}
               className="text-2xl md:text-3xl font-bold text-red-600 mb-8 flex items-center gap-3"
             >
@@ -93,7 +93,7 @@ const ProblemSolution = () => {
                   key={index}
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.6 + index * 0.1 }}
+                  transition={{ duration: 0.4, delay: 0.2 + index * 0.05 }}
                   whileHover={{ scale: 1.02, x: 5 }}
                   viewport={{ once: true }}
                   className="bg-white p-6 rounded-xl shadow-md border-l-4 border-red-400 hover:shadow-lg transition-all duration-300"
@@ -120,13 +120,13 @@ const ProblemSolution = () => {
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
             viewport={{ once: true }}
           >
             <motion.h3 
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.6 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
               viewport={{ once: true }}
               className="text-2xl md:text-3xl font-bold text-emerald-600 mb-8 flex items-center gap-3"
             >
@@ -139,7 +139,7 @@ const ProblemSolution = () => {
                   key={index}
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.8 + index * 0.1 }}
+                  transition={{ duration: 0.4, delay: 0.25 + index * 0.05 }}
                   whileHover={{ scale: 1.02, x: -5 }}
                   viewport={{ once: true }}
                   className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 rounded-xl shadow-md border-l-4 border-emerald-400 hover:shadow-lg transition-all duration-300"
