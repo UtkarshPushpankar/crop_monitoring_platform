@@ -1,8 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, MessageCircle, Leaf } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Hero = () => {
+
+  const navigate = useNavigate();
+
   return (
     <section
       className="relative min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
@@ -65,7 +69,11 @@ const Hero = () => {
             <motion.button
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
-              className="group bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 flex items-center gap-2 shadow-xl hover:shadow-2xl"
+              onClick={() => {
+                navigate('/agritools')
+                scrollTo(0, 0)
+              }}
+              className="group bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 flex items-center gap-2 shadow-xl hover:shadow-2xl cursor-pointer"
             >
               Explore Platform
               <motion.div

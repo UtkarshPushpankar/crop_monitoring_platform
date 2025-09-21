@@ -40,7 +40,7 @@ const ProblemSolution = () => {
   ];
 
   return (
-    <section className="py-20 bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <section className="py-20 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
@@ -96,7 +96,7 @@ const ProblemSolution = () => {
                   transition={{ duration: 0.6, delay: 0.6 + index * 0.1 }}
                   whileHover={{ scale: 1.02, x: 5 }}
                   viewport={{ once: true }}
-                  className="bg-white p-6 rounded-xl shadow-md border-l-4 border-red-400 hover:shadow-lg transition-all duration-300"
+                  className="bg-white/80 backdrop-blur-sm p-6 rounded-xl shadow-md border-l-4 border-red-400 hover:shadow-lg hover:bg-white/90 transition-all duration-300"
                 >
                   <div className="flex items-start gap-4">
                     <motion.div 
@@ -142,7 +142,7 @@ const ProblemSolution = () => {
                   transition={{ duration: 0.6, delay: 0.8 + index * 0.1 }}
                   whileHover={{ scale: 1.02, x: -5 }}
                   viewport={{ once: true }}
-                  className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 rounded-xl shadow-md border-l-4 border-emerald-400 hover:shadow-lg transition-all duration-300"
+                  className="bg-gradient-to-r from-emerald-50/80 to-teal-50/80 backdrop-blur-sm p-6 rounded-xl shadow-md border-l-4 border-emerald-400 hover:shadow-lg hover:from-emerald-50/90 hover:to-teal-50/90 transition-all duration-300"
                 >
                   <div className="flex items-start gap-4">
                     <motion.div 
