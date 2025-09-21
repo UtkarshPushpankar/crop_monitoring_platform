@@ -3,13 +3,17 @@ import { Leaf, MapPin, AlertTriangle, TrendingUp, Cpu, Layers } from "lucide-rea
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import axios from "axios";
+import jsPDF from "jspdf";
+
+const PYTHON_URL = import.meta.env.VITE_PYTHON_URL;
 
 const Dashboard = () => {
-const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.2 });
-  const fileRef = useRef();
+  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.2 });
+  const fileInputRef = useRef(null);
 
   const [loading, setLoading] = useState(false);
-  const [imageFile, setImageFile] = useState(null);
+  const [imageFile, setImageFile] = useState(null); // File object
   const [artifacts, setArtifacts] = useState({ ndvi_map: null, soil_map: null, risk_map: null });
   const [temporal, setTemporal] = useState([]);
   const [alerts, setAlerts] = useState([]);
@@ -17,7 +21,7 @@ const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.2 });
   const [riskZones, setRiskZones] = useState([]);
   const [fields, setFields] = useState([]);
 
-
+  // Mock response if backend fails
   const mockResponse = {
     artifacts: {
       ndvi_map: '/placeholder_ndvi.png',
@@ -56,75 +60,114 @@ const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.2 });
     loadSnapshot();
   }, []);
 
-  function applyResponse(json) {
+  const applyResponse = (json) => {
     setArtifacts(json.artifacts || mockResponse.artifacts);
     setTemporal(json.temporal || mockResponse.temporal);
     setAlerts(json.alerts || mockResponse.alerts);
     setSoilSummary(json.soilSummary || mockResponse.soilSummary);
     setRiskZones(json.riskZones || mockResponse.riskZones);
     setFields(json.fields || mockResponse.fields);
-  }
+  };
 
-  function onFileChange(e) {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    setImageFile(f);
-  }
+  // === File upload handler ===
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setImageFile(file);
 
-  async function analyzeImage() {
-    if (!imageFile) return alert('Please choose a multispectral / hyperspectral image (or RGB+NIR)');
-    setLoading(true);
+    const formData = new FormData();
+    formData.append("image", file);
+
     try {
-      const fd = new FormData();
-      fd.append('image', imageFile);
-      const res = await fetch('/api/analyze', { method: 'POST', body: fd });
+      const res = await axios.post(`${PYTHON_URL}/upload`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      console.log("Upload response:", res.data);
+    } catch (err) {
+      console.error("Upload failed:", err);
+      alert("Image upload failed. Using mock data.");
+    }
+  };
+
+  // === Analyze Image ===
+  const analyzeImage = async () => {
+    if (!imageFile) return alert("Please upload an image first!");
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append("image", imageFile);
+
+    try {
+      const res = await fetch(`${PYTHON_URL}/analyze`, { method: "POST", body: formData });
       if (!res.ok) {
-        console.warn('Backend analyze failed or not present — using mock response');
+        console.warn("Analyze failed, using mock response");
         applyResponse(mockResponse);
       } else {
         const json = await res.json();
         applyResponse(json);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
       applyResponse(mockResponse);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  async function saveSnapshot() {
+  // === Save snapshot ===
+  const saveSnapshot = async () => {
     setLoading(true);
     try {
       const payload = { artifacts, temporal, alerts, soilSummary, riskZones, fields };
       const res = await fetch('/api/save', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       });
-      if (res.ok) alert('Snapshot saved'); else alert('Save failed (backend missing) — check console');
-    } catch (e) { console.error(e); alert('Save failed'); }
-    finally { setLoading(false); }
-  }
-
-  // small helpers
-  const ndviBadge = (v) => {
-    if (v >= 0.7) return 'bg-emerald-600 text-white';
-    if (v >= 0.4) return 'bg-yellow-400 text-black';
-    return 'bg-red-500 text-white';
+      if (res.ok) alert("Snapshot saved!");
+      else alert("Save failed, backend missing");
+    } catch (err) {
+      console.error(err);
+      alert("Save failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // === Export PDF ===
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text("फसलSaathi — Soil & Crop Report", 10, 20);
+
+    if (soilSummary) {
+      doc.setFontSize(12);
+      doc.text(`Soil Score: ${soilSummary.score}`, 10, 40);
+      doc.text(`pH: ${soilSummary.pH}`, 10, 50);
+      doc.text(`Moisture: ${soilSummary.moisture}`, 10, 60);
+      doc.text(`Nitrogen: ${soilSummary.N}`, 10, 70);
+      doc.text(`Phosphorus: ${soilSummary.P}`, 10, 80);
+      doc.text(`Potassium: ${soilSummary.K}`, 10, 90);
+    }
+
+    doc.save("soil_report.pdf");
+  };
+
+  // === Helper for NDVI badge color ===
+  const ndviBadge = (v) => v >= 0.7 ? 'bg-emerald-600 text-white' : v >= 0.4 ? 'bg-yellow-400 text-black' : 'bg-red-500 text-white';
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-gradient-to-br from-green-50 via-green-100 to-white relative overflow-hidden font-sans">
       <div className="absolute top-0 left-0 w-full">
-        <svg className="w-full h-20" viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-          <path d="M0,0 C240,60 480,60 720,30 C960,0 1200,0 1440,30 L1440,0 L0,0 Z" fill="rgba(34, 197, 94, 0.6)"/>
-          <path d="M0,10 C240,70 480,70 720,40 C960,10 1200,10 1440,40 L1440,0 L0,0 Z" fill="rgba(34, 197, 94, 0.4)"/>
-          <path d="M0,20 C240,80 480,80 720,50 C960,20 1200,20 1440,50 L1440,0 L0,0 Z" fill="rgba(34, 197, 94, 0.2)"/>
+        <svg className="w-full h-20" viewBox="0 0 1440 80" fill="none" preserveAspectRatio="none">
+          <path d="M0,0 C240,60 480,60 720,30 C960,0 1200,0 1440,30 L1440,0 L0,0 Z" fill="rgba(34, 197, 94, 0.6)" />
+          <path d="M0,10 C240,70 480,70 720,40 C960,10 1200,10 1440,40 L1440,0 L0,0 Z" fill="rgba(34, 197, 94, 0.4)" />
+          <path d="M0,20 C240,80 480,80 720,50 C960,20 1200,20 1440,50 L1440,0 L0,0 Z" fill="rgba(34, 197, 94, 0.2)" />
         </svg>
       </div>
 
       <motion.div ref={ref} initial={{ opacity: 0, y: 80 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }}>
-        <div className="relative z-10 max-w-7xl mx-auto px-6 py-8">
+        <div className="relative z-10 max-w-7xl  mt-14 mx-auto px-6 py-8">
           {/* Header */}
           <header className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -135,19 +178,19 @@ const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.2 });
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onFileChange} />
-              <button onClick={() => fileRef.current.click()} className="px-3 py-2 bg-white border rounded-md">Upload Image</button>
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+              <button onClick={() => fileInputRef.current.click()} className="px-3 py-2 bg-white border rounded-md">Upload Image</button>
               <button onClick={analyzeImage} className={`px-4 py-2 rounded-md text-white ${loading ? 'bg-gray-400' : 'bg-green-600'}`} disabled={loading}>{loading ? 'Analyzing...' : 'Analyze'}</button>
               <button onClick={saveSnapshot} className="px-4 py-2 rounded-md bg-emerald-600 text-white">Save</button>
+              <button onClick={exportPDF} className="px-4 py-2 rounded-md bg-sky-600 text-white">Export PDF</button>
             </div>
           </header>
 
-          {/* Top: Spectral Health Map */}
           <section className="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl p-4 mb-6">
             <div className="flex items-start justify-between gap-4">
               <div className="w-full">
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-lg font-semibold flex items-center gap-2"><MapPin className="w-5 h-5"/> Spectral Health Map</h2>
+                  <h2 className="text-lg font-semibold flex items-center gap-2"><MapPin className="w-5 h-5" /> Spectral Health Map</h2>
                   <div className="flex items-center gap-2">
                     <button className="px-3 py-1 rounded bg-slate-100">NDVI</button>
                     <button className="px-3 py-1 rounded bg-slate-100">Soil</button>
@@ -180,7 +223,7 @@ const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.2 });
                   <h3 className="font-semibold text-sm mb-2">High Risk Zones</h3>
                   <ul className="text-sm text-gray-700 space-y-1">
                     {riskZones.map(r => (
-                      <li key={r.id} className={`p-2 rounded ${r.severity>0.7? 'bg-red-50':'bg-yellow-50'}`}>{r.name} • {(r.severity*100).toFixed(0)}%</li>
+                      <li key={r.id} className={`p-2 rounded ${r.severity > 0.7 ? 'bg-red-50' : 'bg-yellow-50'}`}>{r.name} • {(r.severity * 100).toFixed(0)}%</li>
                     ))}
                   </ul>
                 </div>
@@ -191,10 +234,10 @@ const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.2 });
           {/* Middle: Trends + Risk map */}
           <div className="grid lg:grid-cols-2 gap-6 mb-6">
             <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow p-4">
-              <h3 className="font-semibold mb-3 flex items-center gap-2"><TrendingUp className="w-5 h-5"/> Temporal Trend Plots</h3>
+              <h3 className="font-semibold mb-3 flex items-center gap-2"><TrendingUp className="w-5 h-5" /> Temporal Trend Plots</h3>
               <ResponsiveContainer width="100%" height={260}>
                 <LineChart data={temporal}
-                          margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                  margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
                   <YAxis />
@@ -207,7 +250,7 @@ const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.2 });
             </div>
 
             <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow p-4">
-              <h3 className="font-semibold mb-3 flex items-center gap-2"><Layers className="w-5 h-5"/> Predicted Risk Zones Map</h3>
+              <h3 className="font-semibold mb-3 flex items-center gap-2"><Layers className="w-5 h-5" /> Predicted Risk Zones Map</h3>
               <div className="border rounded-lg h-64 overflow-hidden">
                 <img src={artifacts.risk_map || '/placeholder_risk.png'} alt="risk" className="w-full h-full object-cover" />
               </div>
@@ -218,10 +261,10 @@ const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.2 });
           {/* Third: Alerts & Fields list */}
           <div className="grid lg:grid-cols-2 gap-6 mb-6">
             <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow p-4">
-              <h3 className="font-semibold mb-3 flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-red-500"/> Anomaly Alerts</h3>
+              <h3 className="font-semibold mb-3 flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-red-500" /> Anomaly Alerts</h3>
               <div className="space-y-3">
                 {alerts.map(a => (
-                  <div key={a.id} className={`p-3 rounded-lg ${a.severity==='High' ? 'bg-red-50 border border-red-200':'bg-yellow-50 border border-yellow-200'}`}>
+                  <div key={a.id} className={`p-3 rounded-lg ${a.severity === 'High' ? 'bg-red-50 border border-red-200' : 'bg-yellow-50 border border-yellow-200'}`}>
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="font-semibold">{a.title}</div>
@@ -235,7 +278,7 @@ const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.2 });
             </div>
 
             <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow p-4">
-              <h3 className="font-semibold mb-3 flex items-center gap-2"><Cpu className="w-5 h-5"/> Fields & Soil Summary</h3>
+              <h3 className="font-semibold mb-3 flex items-center gap-2"><Cpu className="w-5 h-5" /> Fields & Soil Summary</h3>
               <div className="grid grid-cols-1 gap-3">
                 {fields.map(f => (
                   <div key={f.id} className="p-3 rounded-lg border bg-white">
@@ -262,10 +305,11 @@ const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.2 });
             </div>
           </div>
 
+
         </div>
       </motion.div>
     </div>
-  )
-}
+  );
+};
 
 export default Dashboard;
