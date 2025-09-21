@@ -29,7 +29,11 @@ const Footer = () => {
                                     <Leaf className="w-4 h-4 text-white" />
                                 </div>
                                 <h2 className="text-xl font-bold bg-gradient-to-r from-white to-emerald-100 bg-clip-text text-transparent">
+<<<<<<< Updated upstream
                                     AgriConnect HUB
+=======
+                                        AgriConnect 
+>>>>>>> Stashed changes
                                 </h2>
                             </div>
                             <p className="text-emerald-50 leading-relaxed max-w-lg text-md font-[500]">
@@ -50,7 +54,7 @@ const Footer = () => {
                                 <div>
                                     <p className="text-emerald-50 font-medium text-xs">Our Location</p>
                                     <p className="text-emerald-100 text-xs">
-                                        Agricultural Research Center, Sector 15,<br />
+                                        Bennett University<br />
                                         Greater Noida, Uttar Pradesh - 201310
                                     </p>
                                 </div>
@@ -62,7 +66,7 @@ const Footer = () => {
                                 </div>
                                 <div>
                                     <p className="text-emerald-50 font-medium text-xs">Call Us</p>
-                                    <p className="text-emerald-100 text-xs">+91 9876543210</p>
+                                    <p className="text-emerald-100 text-xs">+91 9508133792</p>
                                 </div>
                             </div>
 
@@ -72,7 +76,11 @@ const Footer = () => {
                                 </div>
                                 <div>
                                     <p className="text-emerald-50 font-medium text-xs">Email Us</p>
+<<<<<<< Updated upstream
                                     <p className="text-emerald-100 text-xs">info@agriconnecthub.com</p>
+=======
+                                    <p className="text-emerald-100 text-xs">info@agriconnect.com</p>
+>>>>>>> Stashed changes
                                 </div>
                             </div>
                         </div>
@@ -111,12 +119,20 @@ const Footer = () => {
                     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300 to-transparent"></div>
                     <div className="flex flex-col md:flex-row justify-between items-center space-y-1 md:space-y-0">
                         <p className="text-emerald-100 font-medium text-xs">
+<<<<<<< Updated upstream
                             © 2025 AgriConnect Hub. All Rights Reserved.
+=======
+                            © 2025 AgriConnect. All Rights Reserved.
+>>>>>>> Stashed changes
                         </p>
                         <p className="text-emerald-100 text-xs">
                             Designed And Developed By{' '}
                             <span className="text-white font-semibold">
+<<<<<<< Updated upstream
                                 AgriConnect Team
+=======
+                            CodeHex
+>>>>>>> Stashed changes
                             </span>
                         </p>
                     </div>
