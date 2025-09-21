@@ -33,7 +33,6 @@ app.get("/verify-user", verifyUser, (req, res) => {
 });
 
 
-app.use('/farmer',require('./routes/carbon'))
 
 app.listen(PORT,()=>
     { console.log(`Server started on ${PORT}`)
