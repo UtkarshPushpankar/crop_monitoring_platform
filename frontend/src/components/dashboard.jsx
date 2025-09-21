@@ -171,9 +171,11 @@ const Dashboard = () => {
           {/* Header */}
           <header className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <Leaf className="text-green-600 w-10 h-10" />
+              <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-green-500 rounded-xl flex items-center justify-center shadow-lg">
+                <Leaf className="h-6 w-6 text-white" />
+              </div>
               <div>
-                <h1 className="text-2xl lg:text-3xl font-extrabold text-gray-800">फसलSaathi — Crop Monitoring Dashboard</h1>
+                <h1 className="text-2xl lg:text-3xl font-extrabold text-gray-800">AgriConnect — Crop Monitoring Dashboard</h1>
                 <p className="text-sm text-gray-600">Spectral health maps • Temporal trends • Alerts • Soil & risk analytics</p>
               </div>
             </div>
