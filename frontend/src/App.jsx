@@ -1,35 +1,46 @@
 import { useState } from 'react'
 import './App.css'
-import Upload from './uploadImage/uplaod'
-import Chatbot from './Chatbot/Chatbutton'
-import { Route, Routes } from 'react-router-dom'
+import { Route, Routes, useLocation } from 'react-router-dom'
 import HomePage from './pages/HomePage'
 import Footer from './components/Footer'
-
 import Login from './components/Login'
 import Navbar from './components/Navbar'
 import Signup from './components/Signup'
 import AboutPage from './pages/AboutPage'
 import DashboardPage from './pages/DashboardPage'
+import AgriAi from './pages/AgriAi'
+import Contact from './components/Contact'
+import PrivacyPolicy from './components/PrivacyPolicy'
 
 function App() {
   const [count, setCount] = useState(0)
+  const location = useLocation()
+
+  // Full screen routes (no navbar/footer)
+  const fullScreenRoutes = ['/agriai']
+  const isFullScreen = fullScreenRoutes.includes(location.pathname)
 
   return (
     <>
       <div>
-        <Navbar /> 
+        {!isFullScreen && <Navbar />}
+
         <Routes>
-          <Route path='/' element=
-            {<>
+          <Route path='/' element={
+            <>
               <HomePage />
             </>} />
           <Route path='/login' element={<Login />} />
           <Route path='/signup' element={<Signup />} />
-          <Route path='/about' element={<AboutPage/>} />
+          <Route path='/about' element={<AboutPage />} />
           <Route path='/dashboard' element={<DashboardPage />} />
+          <Route path='/agriai' element={<AgriAi />} />
+          <Route path='/contact' element={<Contact />}/>
+          <Route path='/privacypolicy' element={<PrivacyPolicy />}/>
+
         </Routes>
-        <Footer />
+
+        {!isFullScreen && <Footer />}
       </div>
     </>
   )
