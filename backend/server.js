@@ -37,7 +37,7 @@ app.get("/verify-user", verifyUser, (req, res) => {
 
 
 app.listen(PORT,()=>
-    { console.log(`Server started on ${PORT}`)
+    { console.log(Server started on ${PORT})
 })
 // health endpoint
 app.get("/health", (req, res) => {
