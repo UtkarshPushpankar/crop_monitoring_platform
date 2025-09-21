@@ -87,10 +87,10 @@ const Footer = () => {
                             <h3 className="text-xl font-semibold text-emerald-100 mb-1">Quick Links</h3>
                             <nav className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-1">
                                 {[
-                                    { href: "#about", text: "About Us" },
+                                    { href: "/about", text: "About Us" },
                                     // { href: "#services", text: "Our Services" },
                                     { href: "#technology", text: "Technology" },
-                                    { href: "#contact", text: "Contact" },
+                                    { href: "/contact", text: "Contact" },
                                     { href: "#privacy", text: "Privacy Policy" },
                                     // { href: "#terms", text: "Terms & Conditions" },
                                     // { href: "#support", text: "Technical Support" }
