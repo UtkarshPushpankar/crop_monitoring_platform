@@ -1,11 +1,18 @@
-import React, { useState } from 'react';
+import React, { useContext, useState , useEffect } from 'react';
 import { Search, ShoppingCart, Leaf, Phone, Menu, X } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 
 const Navbar = () => {
   const navigate=useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeItem, setActiveItem] = useState('Home');
+  const { isLoggedIn, username, login, logout }=useContext(AuthContext);
+   const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    setShow(true);
+  }, []);
 
   const navItems = [
     // { name: 'Home', href: '/', active: true },
@@ -21,7 +28,6 @@ const Navbar = () => {
 
   return (
     <div className="bg-gradient-to-r from-emerald-50 via-green-50 to-teal-50">
-      
       <nav className="relative bg-gradient-to-r from-white via-emerald-50/30 to-green-50/30 shadow-lg border-b border-emerald-100 overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-5">
