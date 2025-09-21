@@ -1,6 +1,7 @@
+import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from utils import getAnswer
+from utils import getAnswer, getAnswerWithImage
 app = Flask(__name__)
 CORS(app)
 
@@ -27,10 +28,25 @@ def upload_image():
 @app.route('/chats', methods=['POST'])
 def handle_chats():
     try:
-        data = request.get_json()
-        messages = data.get('messages', [])
-        query = data.get('query', '')
-        language = data.get('language', 'english')
+        messages = request.form.get("messages", "[]")
+        query = request.form.get("query", "")
+        language = request.form.get("language", "english")
+        image = request.files.get("image", None)
+
+        if image:
+            # Make sure the directory exists
+            os.makedirs("chats", exist_ok=True)
+
+            # Use image.filename instead of image object
+            image_path = os.path.join("chats", image.filename)
+            image.save(image_path)
+
+            response = getAnswerWithImage(messages, query, language, image_path)
+
+            # optional cleanup
+            os.remove(image_path)
+
+            return jsonify(response), 200
 
         if not query:
             return jsonify({'error': 'No query provided'}), 400
@@ -40,7 +56,6 @@ def handle_chats():
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    
 
 
 if __name__ == '__main__':
