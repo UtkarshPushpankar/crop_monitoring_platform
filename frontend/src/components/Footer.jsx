@@ -29,7 +29,9 @@ const Footer = () => {
                                     <Leaf className="w-4 h-4 text-white" />
                                 </div>
                                 <h2 className="text-xl font-bold bg-gradient-to-r from-white to-emerald-100 bg-clip-text text-transparent">
-                                        फसलSaathi
+
+                                        AgriConnect 
+
                                 </h2>
                             </div>
                             <p className="text-emerald-50 leading-relaxed max-w-lg text-md font-[500]">
@@ -50,7 +52,7 @@ const Footer = () => {
                                 <div>
                                     <p className="text-emerald-50 font-medium text-xs">Our Location</p>
                                     <p className="text-emerald-100 text-xs">
-                                        Agricultural Research Center, Sector 15,<br />
+                                        Bennett University<br />
                                         Greater Noida, Uttar Pradesh - 201310
                                     </p>
                                 </div>
@@ -62,7 +64,7 @@ const Footer = () => {
                                 </div>
                                 <div>
                                     <p className="text-emerald-50 font-medium text-xs">Call Us</p>
-                                    <p className="text-emerald-100 text-xs">+91 9876543210</p>
+                                    <p className="text-emerald-100 text-xs">+91 9508133792</p>
                                 </div>
                             </div>
 
@@ -72,7 +74,8 @@ const Footer = () => {
                                 </div>
                                 <div>
                                     <p className="text-emerald-50 font-medium text-xs">Email Us</p>
-                                    <p className="text-emerald-100 text-xs">info@fasalsaathi.com</p>
+                                    <p className="text-emerald-100 text-xs">info@agriconnect.com</p>
+
                                 </div>
                             </div>
                         </div>
@@ -84,10 +87,10 @@ const Footer = () => {
                             <h3 className="text-xl font-semibold text-emerald-100 mb-1">Quick Links</h3>
                             <nav className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-1">
                                 {[
-                                    { href: "#about", text: "About Us" },
+                                    { href: "/about", text: "About Us" },
                                     // { href: "#services", text: "Our Services" },
                                     { href: "#technology", text: "Technology" },
-                                    { href: "#contact", text: "Contact" },
+                                    { href: "/contact", text: "Contact" },
                                     { href: "#privacy", text: "Privacy Policy" },
                                     // { href: "#terms", text: "Terms & Conditions" },
                                     // { href: "#support", text: "Technical Support" }
@@ -111,12 +114,14 @@ const Footer = () => {
                     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300 to-transparent"></div>
                     <div className="flex flex-col md:flex-row justify-between items-center space-y-1 md:space-y-0">
                         <p className="text-emerald-100 font-medium text-xs">
-                            © 2025 फसलSaathi. All Rights Reserved.
+                            © 2025 AgriConnect. All Rights Reserved.
+
                         </p>
                         <p className="text-emerald-100 text-xs">
                             Designed And Developed By{' '}
                             <span className="text-white font-semibold">
-                            फसलSaathi Team
+                            CodeHex
+
                             </span>
                         </p>
                     </div>
