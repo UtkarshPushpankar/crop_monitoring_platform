@@ -1,325 +1,271 @@
-
-import React, { useState, useEffect } from "react";
-import { Leaf, Thermometer, TrendingUp, UploadCloud, MapPin } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { WiDaySunny, WiCloudy, WiThunderstorm, WiRain } from "react-icons/wi";
-import axios from "axios";
-import CarbonDashboard from "./carbondashboard.jsx";
-
-const API_URL = import.meta.env.VITE_PYTHON_URL;
-const API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
+import React, { useState, useEffect, useRef } from "react";
+import { Leaf, MapPin, AlertTriangle, TrendingUp, Cpu, Layers } from "lucide-react";
+import { motion } from "framer-motion";
+import { useInView } from "react-intersection-observer";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 const Dashboard = () => {
+const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.2 });
+  const fileRef = useRef();
 
-    const [lat, setlat] = useState(null);
-    const [lon, setlon] = useState(null);
-
-    const [weatherData, setWeatherData] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [mandiData, setMandiData] = useState([]);
-    const [recommendation, setRecommendation] = useState("");
-
-
-    const soilUploads = [
-        { image: "/dummy_soil.jpg", analysis: "Nitrogen deficiency detected" },
-        { image: "/dummy_soil2.jpg", analysis: "pH low, add lime" },
-    ];
-
-    const plantUploads = [
-        { image: "https://plus.unsplash.com/premium_photo-1664474619075-644dd191935f?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8aW1hZ2V8ZW58MHx8MHx8fDA%3D", analysis: "Leaf spot detected, apply fungicide" },
-        { image: "/dummy_plant2.jpg", analysis: "Yellowing leaves, check nitrogen" },
-    ];
+  const [loading, setLoading] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [artifacts, setArtifacts] = useState({ ndvi_map: null, soil_map: null, risk_map: null });
+  const [temporal, setTemporal] = useState([]);
+  const [alerts, setAlerts] = useState([]);
+  const [soilSummary, setSoilSummary] = useState(null);
+  const [riskZones, setRiskZones] = useState([]);
+  const [fields, setFields] = useState([]);
 
 
+  const mockResponse = {
+    artifacts: {
+      ndvi_map: '/placeholder_ndvi.png',
+      soil_map: '/placeholder_soil.png',
+      risk_map: '/placeholder_risk.png'
+    },
+    temporal: [
+      { date: '2025-08-25', ndvi: 0.72, moisture: 24 },
+      { date: '2025-09-01', ndvi: 0.68, moisture: 20 },
+      { date: '2025-09-08', ndvi: 0.63, moisture: 18 },
+      { date: '2025-09-15', ndvi: 0.55, moisture: 16 },
+    ],
+    alerts: [
+      { id: 1, severity: 'High', title: 'Pest risk detected', detail: 'Zone C shows leaf spectral signature of possible infestation.' },
+      { id: 2, severity: 'Medium', title: 'Low soil K', detail: 'Potassium below threshold in Zone A.' }
+    ],
+    soilSummary: { pH: 6.4, moisture: '18%', N: 'Medium', P: 'High', K: 'Low', score: 62 },
+    riskZones: [{ id: 'Z1', name: 'Zone A', severity: 0.45 }, { id: 'Z2', name: 'Zone C', severity: 0.88 }],
+    fields: [{ id: 'A', ndvi: 0.55, soilScore: 62, bbox: [77.0, 28.6] }, { id: 'C', ndvi: 0.22, soilScore: 40, bbox: [77.02, 28.62] }]
+  };
 
-    // ------------------------------------------------------------------------------------4
-
-
-    const getAISuggestion = () => {
-        try {
-            axios.post(`${API_URL}/weather`, {"weather_data":weatherData})
-                .then((res) => {
-                    // console.log("AI Suggestion:", res.data.recommendation);
-                    setRecommendation(res.data.recommendation);
-                })
-                .catch((err) => {
-                    console.error(err);
-                });
-        } catch (err) {
-            console.log(err);
-        }
-    };
-
-    const getWeatherIcon = (condition) => {
-        switch (condition.toLowerCase()) {
-            case "sunny": return <WiDaySunny className="w-12 h-12 text-yellow-500" />;
-            case "cloudy": return <WiCloudy className="w-12 h-12 text-gray-500" />;
-            case "rain": return <WiRain className="w-12 h-12 text-blue-500" />;
-            case "thunderstorm": return <WiThunderstorm className="w-12 h-12 text-purple-700" />;
-            default: return <WiDaySunny className="w-12 h-12 text-yellow-500" />;
-        }
-    };
-
-    // Carousel states
-    const [soilSlide, setSoilSlide] = useState(0);
-    const [plantSlide, setPlantSlide] = useState(0);
-
-    const nextSlide = (type) => {
-        if (type === "soil") setSoilSlide((prev) => (prev + 1) % soilUploads.length);
-        else setPlantSlide((prev) => (prev + 1) % plantUploads.length);
-    };
-
-    const prevSlide = (type) => {
-        if (type === "soil") setSoilSlide((prev) => (prev - 1 + soilUploads.length) % soilUploads.length);
-        else setPlantSlide((prev) => (prev - 1 + plantUploads.length) % plantUploads.length);
-    };
-
-
-    // Location
-    const handleDetectLocation = async () => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(async (pos) => {
-                setlat(pos.coords.latitude);
-                setlon(pos.coords.longitude);
-                if (lat && lon) console.log(lat, lon);
-            });
+  useEffect(() => {
+    async function loadSnapshot() {
+      try {
+        const res = await fetch('/api/dashboard/latest');
+        if (res.ok) {
+          const json = await res.json();
+          applyResponse(json);
         } else {
-            alert("Geolocation not supported");
+          applyResponse(mockResponse);
         }
+      } catch (e) {
+        applyResponse(mockResponse);
+      }
+    }
+    loadSnapshot();
+  }, []);
 
-    };
+  function applyResponse(json) {
+    setArtifacts(json.artifacts || mockResponse.artifacts);
+    setTemporal(json.temporal || mockResponse.temporal);
+    setAlerts(json.alerts || mockResponse.alerts);
+    setSoilSummary(json.soilSummary || mockResponse.soilSummary);
+    setRiskZones(json.riskZones || mockResponse.riskZones);
+    setFields(json.fields || mockResponse.fields);
+  }
 
-    useEffect(() => {
-        handleDetectLocation();
-    }, []);
+  function onFileChange(e) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setImageFile(f);
+  }
 
-    useEffect(() => {
-        if (!lat || !lon) return;
+  async function analyzeImage() {
+    if (!imageFile) return alert('Please choose a multispectral / hyperspectral image (or RGB+NIR)');
+    setLoading(true);
+    try {
+      const fd = new FormData();
+      fd.append('image', imageFile);
+      const res = await fetch('/api/analyze', { method: 'POST', body: fd });
+      if (!res.ok) {
+        console.warn('Backend analyze failed or not present — using mock response');
+        applyResponse(mockResponse);
+      } else {
+        const json = await res.json();
+        applyResponse(json);
+      }
+    } catch (e) {
+      console.error(e);
+      applyResponse(mockResponse);
+    } finally {
+      setLoading(false);
+    }
+  }
 
-        const fetchWeather = async () => {
-            try {
-                setLoading(true);
+  async function saveSnapshot() {
+    setLoading(true);
+    try {
+      const payload = { artifacts, temporal, alerts, soilSummary, riskZones, fields };
+      const res = await fetch('/api/save', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+      });
+      if (res.ok) alert('Snapshot saved'); else alert('Save failed (backend missing) — check console');
+    } catch (e) { console.error(e); alert('Save failed'); }
+    finally { setLoading(false); }
+  }
 
-                const res = await fetch(
-                    `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}`
-                );
-                const data = await res.json();
-                // console.log(data);
-
-                // Group 3-hourly forecasts by day
-                const daysMap = {};
-                data.list.forEach(item => {
-                    const date = new Date(item.dt * 1000);
-                    const dayKey = date.toISOString().split("T")[0]; // YYYY-MM-DD
-                    if (!daysMap[dayKey]) daysMap[dayKey] = [];
-                    daysMap[dayKey].push(item);
-                });
-
-                // Get today + next 2 days
-                const forecast = Object.keys(daysMap)
-                    .slice(0, 3)
-                    .map(dayKey => {
-                        const dayItems = daysMap[dayKey];
-                        const temps = dayItems.map(d => d.main.temp);
-                        const avgTemp = Math.round(temps.reduce((a, b) => a + b, 0) / temps.length);
-                        const condition = dayItems[0].weather[0].main;
-                        const weekday = new Date(dayItems[0].dt * 1000).toLocaleDateString("en-US", { weekday: "short" });
-
-                        return {
-                            day: weekday,
-                            temp: `${avgTemp}°C`,
-                            condition
-                        };
-                    });
-
-                setWeatherData(forecast);
-                // console.log("3-day Weather:", forecast);
-            } catch (err) {
-                console.error(err);
-            } finally {
-                // getAISuggestion();
-                setLoading(false);
-            }
-        };
-
-        fetchWeather();
-    }, [lat, lon]);
-
-    useEffect(() => {
-        if (weatherData.length === 0) return;
-        getAISuggestion();
-    }, [weatherData]);
-
-
-    useEffect(() => {
-        if (!lat || !lon) return;
-        console.log("Fetching Mandi data for:", lat, lon);
-        const fetchMandi = async () => {
-            try {
-                const res = await axios.get(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
-                const data = res.data;
-                console.log("Mandi Data:", data.address.state_district);
-                const district = data.address.state_district
-                const state = data.address.state
-                const price = await axios.get(`http://localhost:5000/mandidata/data/?state=${state}&district=${district}`);
-                // console.log("Mandi Price:",price.data);
-                setMandiData(price.data);
-
-            } catch (err) {
-                console.log(err);
-            }
-        }
-        fetchMandi();
-    }, [lat, lon]);
+  // small helpers
+  const ndviBadge = (v) => {
+    if (v >= 0.7) return 'bg-emerald-600 text-white';
+    if (v >= 0.4) return 'bg-yellow-400 text-black';
+    return 'bg-red-500 text-white';
+  };
 
 
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-green-100 via-green-200 to-green-300 relative overflow-hidden">
-            <div className="max-w-7xl mx-auto px-6 py-12">
+  return (
+    <div className="min-h-[calc(100vh-64px)] bg-gradient-to-br from-green-50 via-green-100 to-white relative overflow-hidden font-sans">
+      <div className="absolute top-0 left-0 w-full">
+        <svg className="w-full h-20" viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+          <path d="M0,0 C240,60 480,60 720,30 C960,0 1200,0 1440,30 L1440,0 L0,0 Z" fill="rgba(34, 197, 94, 0.6)"/>
+          <path d="M0,10 C240,70 480,70 720,40 C960,10 1200,10 1440,40 L1440,0 L0,0 Z" fill="rgba(34, 197, 94, 0.4)"/>
+          <path d="M0,20 C240,80 480,80 720,50 C960,20 1200,20 1440,50 L1440,0 L0,0 Z" fill="rgba(34, 197, 94, 0.2)"/>
+        </svg>
+      </div>
 
-                {/* Header */}
-                <div className="text-center mb-10">
-                    <h1 className="text-5xl font-extrabold text-gray-800 mb-2 flex justify-center items-center gap-3">
-                        <Leaf className="text-green-700 w-12 h-12" />
-                        फसलSaathi
-                    </h1>
-                    <p className="text-gray-700 max-w-3xl mx-auto">
-                        AI-powered crop & soil monitoring, real-time weather & mandi forecasting, and sustainability insights.
-                    </p>
-                    <p className="text-gray-600 mt-2 font-semibold"></p>
-                </div>
-
-                {/* Weather & Mandi Unified Card */}
-                <div className="grid md:grid-cols-2 gap-8 mb-12">
-                    {<motion.div whileHover={{ scale: 1.05 }} className="bg-white/70 backdrop-blur-md rounded-2xl shadow-lg p-6">
-                        <h2 className="text-xl font-bold text-gray-800 flex items-center gap-3 mb-4">
-                            <Thermometer className="w-8 h-8 text-red-500" />
-                            Real-Time 3-Day Weather
-                        </h2>
-
-                        <div className="grid grid-cols-3 gap-4 text-center mb-4">
-                            {weatherData.map((day, i) => (
-                                <motion.div
-                                    key={i}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: i * 0.2 }}
-                                    className="bg-green-50/50 rounded-xl p-3 flex flex-col items-center justify-center shadow-sm"
-                                >
-                                    <span className="font-semibold text-gray-800">{day.day}</span>
-                                    <div className="my-2">{getWeatherIcon(day.condition)}</div>
-                                    <span className="text-gray-700">{day.temp}</span>
-                                    <span className="text-sm text-gray-600">{day.condition}</span>
-                                </motion.div>
-                            ))}
-                        </div>
-
-                        <p className="text-green-700 font-semibold mt-2 text-center">
-                            AI Suggestion: {recommendation || "Loading..."}
-                        </p>
-                    </motion.div>}
-
-
-                    <motion.div whileHover={{ scale: 1.05 }} className="bg-white/70 backdrop-blur-md rounded-2xl shadow-lg p-6">
-                        <div className="flex items-center gap-3 mb-3">
-                            <TrendingUp className="w-8 h-8 text-blue-600" />
-                            <h2 className="text-xl font-bold text-gray-800">(Your District) Mandi Price Forecast</h2>
-                        </div>
-                        {mandiData.map((item, index) => (
-                            <div key={index} className="flex justify-between text-gray-700 mb-1">
-                                <span>{item.crop}</span>
-                                <span className="font-semibold">{item.price} ({item.change})</span>
-                            </div>
-                        ))}
-                    </motion.div>
-                </div>
-
-                {/* Previous Uploads */}
-                <h2 className="text-3xl font-bold text-gray-800 mb-6 flex justify-center items-center gap-3">
-                    <UploadCloud className="w-8 h-8 text-green-600" /> Previous Uploads
-                </h2>
-
-                <div className="grid md:grid-cols-2 gap-6 mb-12">
-                    {/* Soil Analysis Box */}
-                    <div className="bg-white/70 backdrop-blur-md rounded-2xl shadow-lg p-4 relative overflow-hidden">
-                        <h3 className="text-lg font-bold text-gray-800 mb-3">Soil Analysis</h3>
-                        <div className="relative">
-                            <button
-                                onClick={() => prevSlide("soil")}
-                                className="absolute left-0 top-1/2 -translate-y-1/2 bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded-full shadow-lg z-10"
-                            >
-                                ◀
-                            </button>
-                            <AnimatePresence mode="wait">
-                                <motion.div
-                                    key={soilSlide}
-                                    initial={{ opacity: 0, x: 100 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -100 }}
-                                    transition={{ duration: 0.5 }}
-                                    className="w-full text-center"
-                                >
-                                    <img
-                                        src={soilUploads[soilSlide].image}
-                                        alt="soil"
-                                        className="rounded-xl w-full h-40 object-cover"
-                                    />
-                                    <p className="text-gray-600 text-sm mt-2">{soilUploads[soilSlide].analysis}</p>
-                                </motion.div>
-                            </AnimatePresence>
-                            <button
-                                onClick={() => nextSlide("soil")}
-                                className="absolute right-0 top-1/2 -translate-y-1/2 bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded-full shadow-lg z-10"
-                            >
-                                ▶
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Plant Analysis Box */}
-                    <div className="bg-white/70 backdrop-blur-md rounded-2xl shadow-lg p-4 relative overflow-hidden">
-                        <h3 className="text-lg font-bold text-gray-800 mb-3">Plant Analysis</h3>
-                        <div className="relative">
-                            <button
-                                onClick={() => prevSlide("plant")}
-                                className="absolute left-0 top-1/2 -translate-y-1/2 bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded-full shadow-lg z-10"
-                            >
-                                ◀
-                            </button>
-                            <AnimatePresence mode="wait">
-                                <motion.div
-                                    key={plantSlide}
-                                    initial={{ opacity: 0, x: 100 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -100 }}
-                                    transition={{ duration: 0.5 }}
-                                    className="w-full text-center"
-                                >
-                                    <img
-                                        src={plantUploads[plantSlide].image}
-                                        alt="plant"
-                                        className="rounded-xl w-full h-40 object-cover"
-                                    />
-                                    <p className="text-gray-600 text-sm mt-2">{plantUploads[plantSlide].analysis}</p>
-                                </motion.div>
-                            </AnimatePresence>
-                            <button
-                                onClick={() => nextSlide("plant")}
-                                className="absolute right-0 top-1/2 -translate-y-1/2 bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded-full shadow-lg z-10"
-                            >
-                                ▶
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Carbon & Analytics */}
-                {/* <motion.div  className="bg-white/70 backdrop-blur-md rounded-2xl shadow-lg p-6 mb-12"> */}
-                <CarbonDashboard />
-                {/* </motion.div> */}
+      <motion.div ref={ref} initial={{ opacity: 0, y: 80 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }}>
+        <div className="relative z-10 max-w-7xl mx-auto px-6 py-8">
+          {/* Header */}
+          <header className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <Leaf className="text-green-600 w-10 h-10" />
+              <div>
+                <h1 className="text-2xl lg:text-3xl font-extrabold text-gray-800">फसलSaathi — Crop Monitoring Dashboard</h1>
+                <p className="text-sm text-gray-600">Spectral health maps • Temporal trends • Alerts • Soil & risk analytics</p>
+              </div>
             </div>
+            <div className="flex items-center gap-3">
+              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onFileChange} />
+              <button onClick={() => fileRef.current.click()} className="px-3 py-2 bg-white border rounded-md">Upload Image</button>
+              <button onClick={analyzeImage} className={`px-4 py-2 rounded-md text-white ${loading ? 'bg-gray-400' : 'bg-green-600'}`} disabled={loading}>{loading ? 'Analyzing...' : 'Analyze'}</button>
+              <button onClick={saveSnapshot} className="px-4 py-2 rounded-md bg-emerald-600 text-white">Save</button>
+            </div>
+          </header>
+
+          {/* Top: Spectral Health Map */}
+          <section className="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl p-4 mb-6">
+            <div className="flex items-start justify-between gap-4">
+              <div className="w-full">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-semibold flex items-center gap-2"><MapPin className="w-5 h-5"/> Spectral Health Map</h2>
+                  <div className="flex items-center gap-2">
+                    <button className="px-3 py-1 rounded bg-slate-100">NDVI</button>
+                    <button className="px-3 py-1 rounded bg-slate-100">Soil</button>
+                    <button className="px-3 py-1 rounded bg-slate-100">Risk</button>
+                  </div>
+                </div>
+
+                <div className="border rounded-lg h-96 overflow-hidden relative">
+                  {/* show map images from artifacts returned by backend */}
+                  <img src={artifacts.ndvi_map || '/placeholder_ndvi.png'} alt="ndvi" className="w-full h-full object-cover" />
+                  {/* legend */}
+                  <div className="absolute right-4 bottom-4 bg-white/90 rounded-md p-2 text-xs shadow">Legend: <span className="ml-2 font-semibold">Green healthy • Yellow stressed • Red unhealthy</span></div>
+                </div>
+              </div>
+
+              <aside className="w-72 ml-4 flex-shrink-0">
+                <div className="bg-white rounded-xl p-4 shadow mb-4">
+                  <h3 className="font-semibold text-sm mb-2">Soil Condition Score</h3>
+                  <div className="text-3xl font-bold">{soilSummary?.score ?? '—'}</div>
+                  <div className="text-xs text-gray-500 mt-2">pH: {soilSummary?.pH ?? '—'} • Moisture: {soilSummary?.moisture ?? '—'}</div>
+                </div>
+
+                <div className="bg-white rounded-xl p-4 shadow mb-4">
+                  <h3 className="font-semibold text-sm mb-2">Quick Actions</h3>
+                  <button className="w-full py-2 rounded bg-yellow-500 text-white mb-2">Run Targeted Scan</button>
+                  <button className="w-full py-2 rounded bg-sky-600 text-white">Generate Report</button>
+                </div>
+
+                <div className="bg-white rounded-xl p-3 shadow">
+                  <h3 className="font-semibold text-sm mb-2">High Risk Zones</h3>
+                  <ul className="text-sm text-gray-700 space-y-1">
+                    {riskZones.map(r => (
+                      <li key={r.id} className={`p-2 rounded ${r.severity>0.7? 'bg-red-50':'bg-yellow-50'}`}>{r.name} • {(r.severity*100).toFixed(0)}%</li>
+                    ))}
+                  </ul>
+                </div>
+              </aside>
+            </div>
+          </section>
+
+          {/* Middle: Trends + Risk map */}
+          <div className="grid lg:grid-cols-2 gap-6 mb-6">
+            <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow p-4">
+              <h3 className="font-semibold mb-3 flex items-center gap-2"><TrendingUp className="w-5 h-5"/> Temporal Trend Plots</h3>
+              <ResponsiveContainer width="100%" height={260}>
+                <LineChart data={temporal}
+                          margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="ndvi" stroke="#10B981" dot={false} />
+                  <Line type="monotone" dataKey="moisture" stroke="#3B82F6" dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow p-4">
+              <h3 className="font-semibold mb-3 flex items-center gap-2"><Layers className="w-5 h-5"/> Predicted Risk Zones Map</h3>
+              <div className="border rounded-lg h-64 overflow-hidden">
+                <img src={artifacts.risk_map || '/placeholder_risk.png'} alt="risk" className="w-full h-full object-cover" />
+              </div>
+              <div className="mt-3 text-sm text-gray-600">Click a risk zone to see recommendations and targeted actions.</div>
+            </div>
+          </div>
+
+          {/* Third: Alerts & Fields list */}
+          <div className="grid lg:grid-cols-2 gap-6 mb-6">
+            <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow p-4">
+              <h3 className="font-semibold mb-3 flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-red-500"/> Anomaly Alerts</h3>
+              <div className="space-y-3">
+                {alerts.map(a => (
+                  <div key={a.id} className={`p-3 rounded-lg ${a.severity==='High' ? 'bg-red-50 border border-red-200':'bg-yellow-50 border border-yellow-200'}`}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold">{a.title}</div>
+                        <div className="text-sm text-gray-600">{a.detail}</div>
+                      </div>
+                      <div className="text-xs text-gray-500">{a.severity}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow p-4">
+              <h3 className="font-semibold mb-3 flex items-center gap-2"><Cpu className="w-5 h-5"/> Fields & Soil Summary</h3>
+              <div className="grid grid-cols-1 gap-3">
+                {fields.map(f => (
+                  <div key={f.id} className="p-3 rounded-lg border bg-white">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold">Field {f.id}</div>
+                        <div className="text-sm text-gray-600">NDVI: {f.ndvi}</div>
+                      </div>
+                      <div className={`${ndviBadge(f.ndvi)} px-3 py-1 rounded`}>{f.soilScore}</div>
+                    </div>
+                    <div className="mt-2 text-sm text-gray-600">Actions: <button className="text-sm text-sky-600 underline">Inspect</button> • <button className="text-sm text-yellow-600 underline">Treat</button></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom actions */}
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-600">Last updated: {new Date().toLocaleString()}</div>
+            <div className="flex gap-3">
+              <button className="px-4 py-2 rounded bg-sky-600 text-white">Export PDF</button>
+              <button className="px-4 py-2 rounded bg-white border" onClick={() => alert('Connect drone sensor flow not implemented')}>Connect Drone / Sensor</button>
+            </div>
+          </div>
+
         </div>
-    );
-};
+      </motion.div>
+    </div>
+  )
+}
 
 export default Dashboard;

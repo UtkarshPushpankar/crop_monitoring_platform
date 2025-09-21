@@ -45,17 +45,6 @@ Answer:
 
 chain  = LLMChain(llm = llm , prompt = prompt)
 
-wheaterchain = LLMChain(llm = llm , prompt = PromptTemplate(
-    input_variables=['weather_data'],
-    template="""
-You are an expert agricultural advisor. Based on the following weather data, provide a concise recommendation for crop management. 
-Keep your response short, crisp, and in one line under 20 words.
-Weather data: {weather_data}"""
-))
-
-def getWeatherBasedRecommendation(weather_data):
-    res= wheaterchain.invoke({"weather_data": weather_data})
-    return res["text"]
 
 
 

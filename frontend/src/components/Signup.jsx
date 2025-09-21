@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Leaf } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 
 const Signup = () => {
+  const navigate=useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -17,7 +18,6 @@ const Signup = () => {
       [name]: type === 'checkbox' ? checked : value
     }));
   };
-
   
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,6 +39,7 @@ const Signup = () => {
       const data = await res.json();
       if (res.ok) {
         console.log("Signup successfull: ", { name: data.user.name });
+        alert(`Welcome ${data.user.name}! Account created successfully.`);
         navigate("/");
       } else {
         alert("Signup failed");
