@@ -40,16 +40,16 @@ const ProblemSolution = () => {
   ];
 
   return (
-    <section className="py-20 bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <section className="py-20 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
@@ -58,7 +58,7 @@ const ProblemSolution = () => {
           >
             From Reactive to Proactive Agriculture
           </motion.h2>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15 }}
@@ -77,7 +77,7 @@ const ProblemSolution = () => {
             transition={{ duration: 0.5, delay: 0.1 }}
             viewport={{ once: true }}
           >
-            <motion.h3 
+            <motion.h3
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.15 }}
@@ -89,17 +89,17 @@ const ProblemSolution = () => {
             </motion.h3>
             <div className="space-y-6">
               {problems.map((problem, index) => (
-                <motion.div 
+                <motion.div
                   key={index}
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.2 + index * 0.05 }}
                   whileHover={{ scale: 1.02, x: 5 }}
                   viewport={{ once: true }}
-                  className="bg-white p-6 rounded-xl shadow-md border-l-4 border-red-400 hover:shadow-lg transition-all duration-300"
+                  className="bg-white/80 backdrop-blur-sm p-6 rounded-xl shadow-md border-l-4 border-red-400 hover:shadow-lg hover:bg-white/90 transition-all duration-300"
                 >
                   <div className="flex items-start gap-4">
-                    <motion.div 
+                    <motion.div
                       whileHover={{ rotate: 360 }}
                       transition={{ duration: 0.5 }}
                       className="text-red-500 mt-1"
@@ -123,7 +123,7 @@ const ProblemSolution = () => {
             transition={{ duration: 0.5, delay: 0.15 }}
             viewport={{ once: true }}
           >
-            <motion.h3 
+            <motion.h3
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.2 }}
@@ -135,17 +135,17 @@ const ProblemSolution = () => {
             </motion.h3>
             <div className="space-y-6">
               {solutions.map((solution, index) => (
-                <motion.div 
+                <motion.div
                   key={index}
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.25 + index * 0.05 }}
                   whileHover={{ scale: 1.02, x: -5 }}
                   viewport={{ once: true }}
-                  className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 rounded-xl shadow-md border-l-4 border-emerald-400 hover:shadow-lg transition-all duration-300"
+                  className="bg-gradient-to-r from-emerald-50/80 to-teal-50/80 backdrop-blur-sm p-6 rounded-xl shadow-md border-l-4 border-emerald-400 hover:shadow-lg hover:from-emerald-50/90 hover:to-teal-50/90 transition-all duration-300"
                 >
                   <div className="flex items-start gap-4">
-                    <motion.div 
+                    <motion.div
                       whileHover={{ rotate: 360 }}
                       transition={{ duration: 0.5 }}
                       className="text-emerald-600 mt-1"
