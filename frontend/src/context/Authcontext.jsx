@@ -6,11 +6,12 @@ export const Authprovider = ({ children }) => {
 
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [username, setusername] = useState(null);
+    const [email, setemail] = useState(null);
 
     useEffect(() => {
         const LoginState = async () => {
             try{
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/verify-user`, {
+            const res = await fetch("http://localhost:5000/verify-user", {
                 method: 'GET',
                 credentials: 'include',
             })
@@ -18,6 +19,7 @@ export const Authprovider = ({ children }) => {
                 const data=await res.json();
                 setIsLoggedIn(true);
                 setusername(data.name);
+                setemail(data.email);
             }
             }
             catch(error){
@@ -28,13 +30,14 @@ export const Authprovider = ({ children }) => {
     },[])
 
     const login = (userdata) => {
+        setemail(userdata.email);
         setusername(userdata.name)
         setIsLoggedIn(true);
     }
 
      const logout = async () => {
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/logout`, {
+            const res = await fetch("http://localhost:5000/logout", {
                 method: "POST",
                 credentials: "include",
             });
@@ -55,7 +58,7 @@ export const Authprovider = ({ children }) => {
 
 
     return (
-        <AuthContext.Provider value={{ isLoggedIn, username, login, logout }}>
+        <AuthContext.Provider value={{ isLoggedIn, username, email,login, logout }}>
             {children}
         </AuthContext.Provider>
     );
