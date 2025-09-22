@@ -15,6 +15,7 @@ import CropDiseaseDetection from './pages/CropDiseaseDetection'
 import AgriTools from './components/AgriTools'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import PestControlMonitoring from './components/PestControlPage'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -43,6 +44,7 @@ function App() {
           <Route path='/privacypolicy' element={<PrivacyPolicy />}/>
           <Route path='/crop-disease-detection' element={<CropDiseaseDetection />}/>
           <Route path='/agritools' element={<AgriTools />}/>
+          <Route path='/pestcontrol' element={<PestControlMonitoring />}/>
 
         </Routes>
         <ToastContainer />  
