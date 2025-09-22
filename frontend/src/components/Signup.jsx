@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Leaf } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import { toast, Bounce } from 'react-toastify';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -46,10 +47,34 @@ const Signup = () => {
       const data = await res.json();
       if (res.ok) {
         console.log("Signup successfull: ", { name: data.user.name });
-        alert(`Welcome ${data.user.name}! Account created successfully.`);
-        navigate("/");
+        // navigate("/login");
+        toast.info(`Welcome ${data.user.name} ! Account created successfully.`, {
+          position: "top-right",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "dark",
+          transition: Bounce,
+        });
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000)
       } else {
-        alert("Signup failed");
+        console.log("Server response:", data);
+        toast.info('User Already exists! Try Login.', {
+          position: "top-right",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "dark",
+          transition: Bounce,
+        });
       }
     } catch (err) {
       console.error("Error:", err);

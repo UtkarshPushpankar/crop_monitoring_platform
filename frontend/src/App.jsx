@@ -13,6 +13,8 @@ import Contact from './components/Contact'
 import PrivacyPolicy from './components/PrivacyPolicy'
 import CropDiseaseDetection from './pages/CropDiseaseDetection'
 import AgriTools from './components/AgriTools'
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 import PestControlMonitoring from './components/PestControlPage'
 
 function App() {
@@ -45,6 +47,7 @@ function App() {
           <Route path='/pestcontrol' element={<PestControlMonitoring />}/>
 
         </Routes>
+        <ToastContainer />  
 
         {!isFullScreen && <Footer />}
       </div>
