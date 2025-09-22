@@ -4,12 +4,10 @@ const app=express();
 const cors = require('cors');
 const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
-const cookieParser = require("cookie-parser");
 const PORT=process.env.PORT
 const authRouter=require("./routes/auth")
 const verifyUser=require("./middleware/authmiddleware.js")
 
-const verifyUser=require("./middleware/authmiddleware.js")
 
 require("./config/passport"); 
 
@@ -20,9 +18,9 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
-
-app.use("/",authRouter);
 app.use(cookieParser());
+
+
 app.use("/auth",authRouter);
 
 

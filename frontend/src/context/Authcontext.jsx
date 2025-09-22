@@ -10,24 +10,24 @@ export const Authprovider = ({ children }) => {
 
     useEffect(() => {
         const LoginState = async () => {
-            try{
-            const res = await fetch("http://localhost:5000/verify-user", {
-                method: 'GET',
-                credentials: 'include',
-            })
-            if (res.ok) {
-                const data=await res.json();
-                setIsLoggedIn(true);
-                setusername(data.name);
-                setemail(data.email);
+            try {
+                const res = await fetch("http://localhost:5000/verify-user", {
+                    method: 'GET',
+                    credentials: 'include',
+                })
+                if (res.ok) {
+                    const data = await res.json();
+                    setIsLoggedIn(true);
+                    setusername(data.name);
+                    setemail(data.email);
+                }
             }
+            catch (error) {
+                console.error("Context Error: ", error)
             }
-            catch(error){
-                console.error("Context Error: ",error)
-            }  
         }
         LoginState();
-    },[])
+    }, [])
 
     const login = (userdata) => {
         setemail(userdata.email);
@@ -35,7 +35,7 @@ export const Authprovider = ({ children }) => {
         setIsLoggedIn(true);
     }
 
-     const logout = async () => {
+    const logout = async () => {
         try {
             const res = await fetch("http://localhost:5000/logout", {
                 method: "POST",
@@ -43,14 +43,14 @@ export const Authprovider = ({ children }) => {
             });
 
             if (res.ok) {
-                
+
                 console.log("Logout successful");
             } else {
                 console.log("Logout failed");
             }
         } catch (err) {
             console.error("Error during logout:", err);
-        }finally{
+        } finally {
             setIsLoggedIn(false);
             setusername(null);
         }
@@ -58,7 +58,7 @@ export const Authprovider = ({ children }) => {
 
 
     return (
-        <AuthContext.Provider value={{ isLoggedIn, username, email,login, logout }}>
+        <AuthContext.Provider value={{ isLoggedIn, username, email, login, logout }}>
             {children}
         </AuthContext.Provider>
     );

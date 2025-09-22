@@ -13,6 +13,8 @@ import Contact from './components/Contact'
 import PrivacyPolicy from './components/PrivacyPolicy'
 import CropDiseaseDetection from './pages/CropDiseaseDetection'
 import AgriTools from './components/AgriTools'
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -43,6 +45,7 @@ function App() {
           <Route path='/agritools' element={<AgriTools />}/>
 
         </Routes>
+        <ToastContainer />  
 
         {!isFullScreen && <Footer />}
       </div>

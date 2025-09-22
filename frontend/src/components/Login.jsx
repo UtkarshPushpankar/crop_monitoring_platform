@@ -1,14 +1,13 @@
-import React, { useState , useEffect, useContext} from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Leaf } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from "../context/authcontext.jsx"
-
-import { AuthContext } from "../context/authcontext.jsx"
+import { toast, Bounce } from 'react-toastify';
+import { AuthContext } from "../context/authcontext";
 
 const Login = () => {
-  const navigate=useNavigate();
-  const {login}=useContext(AuthContext);
+  const navigate = useNavigate();
+  const { login, username } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -47,17 +46,49 @@ const Login = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        console.log("Login successfull: ", { name: data.user.name, email:data.user.email});
-        login({name:data.user.name , email:data.user.email})
-        console.log("Login successfull: ", { name: data.user.name, email:data.user.email});
-        login({name:data.user.name , email:data.user.email})
-        navigate("/");
+        toast.success(`🦄 Welcome ${data.user.name}!`, {
+          position: "top-center",
+          autoClose: 1500,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "colored",
+          transition: Bounce,
+        });
+
+        console.log("Login successfull: ", { name: data.user.name, email: data.user.email });
+        login({ name: data.user.name, email: data.user.email })
+        setTimeout(() => {
+          navigate("/");
+        }, 2000);
       } else {
-        alert("Login failed");
+        toast.error('Login Failed', {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "colored",
+          transition: Bounce,
+        });
       }
     } catch (err) {
       console.error("Error:", err);
-      alert("Server error");
+      toast.error('Server Error', {
+        position: "top-center",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+        transition: Bounce,
+      });
     }
   };
 
