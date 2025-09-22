@@ -4,8 +4,11 @@ const app=express();
 const cors = require('cors');
 const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
+const cookieParser = require("cookie-parser");
 const PORT=process.env.PORT
 const authRouter=require("./routes/auth")
+const verifyUser=require("./middleware/authmiddleware.js")
+
 const verifyUser=require("./middleware/authmiddleware.js")
 
 require("./config/passport"); 
@@ -36,11 +39,13 @@ app.post("/logout", (req, res) => {
 app.get("/verify-user", verifyUser, (req, res) => {
   console.log("Cookies:", req.cookies);
   res.json({ message: "User verified", name: req.user.name , email:req.user.email});
+  res.json({ message: "User verified", name: req.user.name , email:req.user.email});
 });
 
 app.listen(PORT,()=>
     { console.log(`Server started on ${PORT}`)
 })
+
 
 app.get("/health", (req, res) => {
   res.json({ status: "OK" });

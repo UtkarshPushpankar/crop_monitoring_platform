@@ -5,6 +5,8 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const verifyUser = require("../middleware/authmiddleware");
 console.log('Auth router loaded');
+const verifyUser = require("../middleware/authmiddleware");
+console.log('Auth router loaded');
 const passport = require("passport");
 
 // Helper function
