@@ -3,7 +3,7 @@ import Hero from '../components/LandingPage/Hero';
 import ProblemSolution from '../components/LandingPage/ProblemSolution';
 import Features from '../components/LandingPage/Features';
 import TargetUsers from '../components/LandingPage/TargetUsers';
-import CTA from '../components/LandingPage/CTA';
+// import CTA from '../components/LandingPage/CTA';
 
 
 const HomePage = () => {
@@ -13,7 +13,7 @@ const HomePage = () => {
       <ProblemSolution />
       <Features />
       <TargetUsers />
-      <CTA />
+      {/* <CTA /> */}
     </div>
   );
 }

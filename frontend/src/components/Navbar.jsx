@@ -1,31 +1,16 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { Search, ShoppingCart, Leaf, Phone, Menu, X } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/authcontext';
 import { User, LogOut, Compass, ChevronDown } from 'lucide-react';
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeItem, setActiveItem] = useState('Home');
   const { isLoggedIn, username, email, login, logout } = useContext(AuthContext);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-  // Remove redundant state - use isLoggedIn directly from context
-  // const [isAuthenticated, setIsAuthenticated] = useState(false);
-  // const [show, setShow] = useState(false);
-
-  // Remove conflicting useEffect hooks
-  // useEffect(() => {
-  //   setIsAuthenticated(isLoggedIn);
-  //   if (isLoggedIn) {
-  //     setShow(false);
-  //   }
-  // }, [isLoggedIn]);
-
-  // useEffect(() => {
-  //   setShow(true);
-  // }, []);
 
   // Add click outside handler for dropdown
   useEffect(() => {
@@ -50,13 +35,12 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
-    logout(); // Call the logout function from context
+    logout(); 
     setIsDropdownOpen(false);
-    navigate('/'); // Redirect to home page
+    navigate('/'); 
   };
 
   const Profile = () => {
-    // Use isLoggedIn directly from context
     return isLoggedIn ? (
       <div className="hidden md:flex items-center space-x-4">
         {/* Profile Section */}
@@ -65,7 +49,7 @@ const Navbar = () => {
             onClick={() => {
               setIsDropdownOpen(!isDropdownOpen);
             }}
-            className="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-green-600 hover:from-emerald-600 hover:via-emerald-700 hover:to-green-700 text-white px-4 py-2.5 rounded-xl font-medium transition-all duration-500 ease-out flex items-center space-x-3 shadow-lg hover:shadow-2xl transform hover:scale-100 hover:translate-y-1 border border-emerald-400/20 backdrop-blur-sm overflow-hidden"
+            className="relative  cursor-pointer  bg-gradient-to-br from-emerald-500 via-emerald-600 to-green-600 hover:from-emerald-600 hover:via-emerald-700 hover:to-green-700 text-white px-4 py-2.5 rounded-xl font-medium transition-all duration-500 ease-out flex items-center space-x-3 shadow-lg hover:shadow-2xl transform hover:scale-100 hover:translate-y-1 border border-emerald-400/20 backdrop-blur-sm overflow-hidden"
           >
             {/* Animated shine effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></div>
@@ -131,10 +115,11 @@ const Navbar = () => {
                 <div className="py-2">
                   <button
                     onClick={() => {
+                      navigate("/agritools")
                       console.log('Explore clicked');
                       setIsDropdownOpen(false);
                     }}
-                    className="group w-full px-5 py-3.5 text-left text-gray-700 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-green-50 flex items-center space-x-3 transition-all duration-300 relative overflow-hidden"
+                    className="group cursor-pointer w-full px-5 py-3.5 text-left text-gray-700 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-green-50 flex items-center space-x-3 transition-all duration-300 relative overflow-hidden"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 to-green-500/0 group-hover:from-emerald-500/8 group-hover:to-green-500/8 transition-all duration-300"></div>
                     <div className="relative z-10 flex items-center space-x-3">
@@ -153,7 +138,7 @@ const Navbar = () => {
 
                   <button
                     onClick={handleLogout}
-                    className="group w-full px-5 py-3.5 text-left text-gray-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 flex items-center space-x-3 transition-all duration-300 relative overflow-hidden"
+                    className="group w-full  cursor-pointer  px-5 py-3.5 text-left text-gray-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 flex items-center space-x-3 transition-all duration-300 relative overflow-hidden"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-red-500/0 to-pink-500/0 group-hover:from-red-500/8 group-hover:to-pink-500/8 transition-all duration-300"></div>
                     <div className="relative z-10 flex items-center space-x-3">
@@ -262,13 +247,13 @@ const Navbar = () => {
                       handleNavClick(item.name);
                     }}
                     className={`px-4 py-2 text-base font-medium transition-all duration-300 relative rounded-lg hover:bg-white/50 backdrop-blur-sm cursor-pointer ${
-                      activeItem === item.name
+                      location.pathname === item.href
                         ? 'text-emerald-700 bg-white/30 shadow-sm'
                         : 'text-gray-700 hover:text-emerald-700'
                     }`}
                   >
                     {item.name}
-                    {activeItem === item.name && (
+                    {location.pathname === item.href && (
                       <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-400 to-green-400 rounded-full"></div>
                     )}
                   </Link>
@@ -307,7 +292,7 @@ const Navbar = () => {
                     handleNavClick(item.name);
                   }}
                   className={`block px-4 py-3 text-base font-medium transition-all duration-300 rounded-lg cursor-pointer ${
-                    activeItem === item.name
+                    location.pathname === item.href
                       ? 'text-emerald-700 bg-white/50 shadow-sm'
                       : 'text-gray-700 hover:text-emerald-700 hover:bg-white/30'
                   }`}

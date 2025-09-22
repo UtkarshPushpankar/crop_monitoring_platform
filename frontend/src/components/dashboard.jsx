@@ -1,14 +1,24 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { Leaf, MapPin, AlertTriangle, TrendingUp, Cpu, Layers } from "lucide-react";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import axios from "axios";
 import jsPDF from "jspdf";
+import { AuthContext } from "../context/authcontext";
+import { useNavigate } from "react-router-dom";
 
 const PYTHON_URL = import.meta.env.VITE_PYTHON_URL;
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const { isLoggedIn } = useContext(AuthContext);
+  useEffect(() => {
+    if (!isLoggedIn){
+      navigate("/login");
+    }
+  }, []);
+
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.2 });
   const fileInputRef = useRef(null);
 

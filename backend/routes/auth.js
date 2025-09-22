@@ -5,6 +5,8 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const verifyUser = require("../middleware/authmiddleware");
 console.log('Auth router loaded');
+const verifyUser = require("../middleware/authmiddleware");
+console.log('Auth router loaded');
 const passport = require("passport");
 
 // Helper function
@@ -72,7 +74,7 @@ router.get('/google/callback',
   passport.authenticate('google', { session: false, failureRedirect: '/' }),
   (req, res) => {
     const token = createToken(req.user);
-    res.redirect(http://localhost:5173/);
+    // res.redirect(http://localhost:5173/);
   }
 );
 
@@ -83,7 +85,7 @@ router.post('/microsoft/callback',
   passport.authenticate('azuread-openidconnect', { session: false, failureRedirect: '/' }),
   (req, res) => {
     const token = createToken(req.user);
-    res.redirect(http://localhost:5173/);
+    // res.redirect("http://localhost:5173/");
   }
 );
 

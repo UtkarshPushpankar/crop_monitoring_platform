@@ -1,8 +1,9 @@
-
 import React, { useState , useEffect, useContext} from 'react';
 import { Leaf } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from "../context/authcontext.jsx"
+
 import { AuthContext } from "../context/authcontext.jsx"
 
 const Login = () => {
@@ -46,6 +47,8 @@ const Login = () => {
       });
       const data = await res.json();
       if (res.ok) {
+        console.log("Login successfull: ", { name: data.user.name, email:data.user.email});
+        login({name:data.user.name , email:data.user.email})
         console.log("Login successfull: ", { name: data.user.name, email:data.user.email});
         login({name:data.user.name , email:data.user.email})
         navigate("/");
