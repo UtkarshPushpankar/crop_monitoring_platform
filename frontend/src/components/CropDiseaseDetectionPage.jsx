@@ -9,12 +9,23 @@ const CropDiseaseDetectionPage = () => {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [result, setResult] = useState(null);
     const [error, setError] = useState(null);
+    const [visualizationImage, setVisualizationImage] = useState(null);
 
     // Backend URL - update this to match your Flask server
-    const BACKEND_URL = 'http://localhost:5000';
+    const BACKEND_URL = 'http://localhost:8080';
 
     const handleImageUpload = (file, type) => {
+        // Add file validation
+        if (!file) return;
+
+        // Validate file types for .pt files
+        if (type !== 'normal' && !file.name.toLowerCase().endsWith('.pt') && !file.name.toLowerCase().endsWith('.pth')) {
+            setError(`Please upload a valid .pt or .pth file for ${type === 'hyperspectral' ? 'hyperspectral' : 'true label'} data.`);
+            return;
+        }
+
         const preview = type === 'normal' ? URL.createObjectURL(file) : null;
+
         if (type === 'normal') {
             setNormalImage({ file, preview });
         } else if (type === 'hyperspectral') {
@@ -22,64 +33,115 @@ const CropDiseaseDetectionPage = () => {
         } else if (type === 'truelabel') {
             setTrueLabel({ file, preview: null });
         }
+
         // Clear any previous errors
         setError(null);
     };
 
     const runAnalysis = async () => {
-        if (!normalImage.file && !hyperspectralImage.file) {
-            setError("Please upload at least one image before running analysis.");
+        if (!normalImage.file || !hyperspectralImage.file) {
+            setError("Please upload both RGB and hyperspectral files for analysis.");
             return;
         }
 
         setIsAnalyzing(true);
         setResult(null);
         setError(null);
+        setVisualizationImage(null);
 
         try {
-            // Create FormData for file upload
+            // Create FormData for file upload - using correct field names for Flask server
             const formData = new FormData();
 
-            if (normalImage.file) {
-                formData.append('rgb_image', normalImage.file);
-            }
-
-            if (hyperspectralImage.file) {
-                formData.append('hsi_image', hyperspectralImage.file);
-            }
+            // Use the correct field names that match your Flask server
+            formData.append('rgb', normalImage.file);  // Changed to 'rgb'
+            formData.append('hsi', hyperspectralImage.file);  // Changed to 'hsi'
 
             if (trueLabel.file) {
-                formData.append('true_label', trueLabel.file);
+                formData.append('label', trueLabel.file);  // Optional true label
             }
 
-            // Make API call to backend
-            const response = await fetch(`${BACKEND_URL}/predict`, {
+            // First get the JSON prediction result
+            const response = await fetch(`${BACKEND_URL}/predict_dual_stream`, {
                 method: 'POST',
                 body: formData,
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to analyze images');
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
             }
 
             const data = await response.json();
-            setResult(data);
+            console.log('API Response:', data);
+
+            // Transform the Flask API response to match frontend expectations
+            const transformedResult = {
+                class: mapPredictionToClass(data.predicted_class),
+                details: generateDetailMessage(data.predicted_class, data.predicted_label),
+                predicted_class: data.predicted_class,
+                predicted_label: data.predicted_label,
+                true_class: data.true_class
+            };
+
+            setResult(transformedResult);
+
+            // Now get the visualization image
+            try {
+                const imageFormData = new FormData();
+                imageFormData.append('rgb', normalImage.file);
+                imageFormData.append('hsi', hyperspectralImage.file);
+                if (trueLabel.file) {
+                    imageFormData.append('label', trueLabel.file);
+                }
+
+                const imageResponse = await fetch(`${BACKEND_URL}/predict_image`, {
+                    method: 'POST',
+                    body: imageFormData,
+                });
+
+                if (imageResponse.ok) {
+                    const imageBlob = await imageResponse.blob();
+                    const imageUrl = URL.createObjectURL(imageBlob);
+                    setVisualizationImage(imageUrl);
+                }
+            } catch (imageError) {
+                console.log('Could not get visualization image:', imageError);
+                // Continue without image - not critical
+            }
 
         } catch (err) {
             console.error('Analysis error:', err);
             setError(err.message || 'Failed to analyze images. Please check your connection and try again.');
-
-            // Fallback to mock result for demo purposes
-            console.log('Falling back to mock result for demo...');
-            const mockResults = [
-                { class: 'healthy', confidence: 94.2, details: 'Crop shows healthy vegetation indices with normal spectral signatures and optimal chlorophyll content. NDVI values indicate robust photosynthetic activity.' },
-                { class: 'rust', confidence: 87.6, details: 'Detected wheat stripe rust patterns in hyperspectral analysis with characteristic yellow-orange pustules. Immediate fungicide treatment recommended.' },
-                { class: 'other', confidence: 76.3, details: 'Identified stress indicators suggesting nutrient deficiency, water stress, or early-stage disease symptoms. Monitor closely and consider soil testing.' }
-            ];
-            setResult(mockResults[Math.floor(Math.random() * mockResults.length)]);
         } finally {
             setIsAnalyzing(false);
+        }
+    };
+
+    const mapPredictionToClass = (predictedClass) => {
+        // Map Flask API class names to frontend class names
+        switch (predictedClass.toLowerCase()) {
+            case 'health':
+                return 'healthy';
+            case 'yellow rust disease':
+                return 'rust';
+            case 'non-rust disease':
+                return 'other';
+            default:
+                return 'other';
+        }
+    };
+
+    const generateDetailMessage = (predictedClass, predictedLabel) => {
+        switch (predictedClass.toLowerCase()) {
+            case 'health':
+                return `Crop shows healthy vegetation indices with normal spectral signatures and optimal chlorophyll content. (Prediction index: ${predictedLabel})`;
+            case 'yellow rust disease':
+                return `Detected wheat stripe rust patterns in hyperspectral analysis with characteristic yellow-orange pustules. (Prediction index: ${predictedLabel})`;
+            case 'non-rust disease':
+                return `Identified stress indicators suggesting nutrient deficiency, water stress, or early-stage disease symptoms. (Prediction index: ${predictedLabel})`;
+            default:
+                return `Analysis completed. Prediction index: ${predictedLabel}`;
         }
     };
 
@@ -112,7 +174,7 @@ const CropDiseaseDetectionPage = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-green-100 via-green-200 to-green-300 relative overflow-hidden">
-            {/* Wavy Top Border - Reduced size */}
+            {/* Wavy Top Border */}
             <div className="absolute top-0 left-0 w-full">
                 <svg className="w-full h-16" viewBox="0 0 1440 64" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
                     <path d="M0,0 C240,50 480,50 720,25 C960,0 1200,0 1440,25 L1440,0 L0,0 Z" fill="rgba(34, 197, 94, 0.7)" />
@@ -121,14 +183,14 @@ const CropDiseaseDetectionPage = () => {
                 </svg>
             </div>
 
-            {/* Background Pattern - Reduced size */}
+            {/* Background Pattern */}
             <div className="absolute inset-0 opacity-25">
                 <svg className="absolute bottom-0 left-0 w-full h-24" viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M0,40L48,50C96,60,192,80,288,80C384,80,480,60,576,56.7C672,53,768,66,864,66.7C960,66,1056,53,1152,53.3C1248,53,1344,66,1392,73.3L1440,80L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z" fill="rgba(34, 197, 94, 0.15)" />
                 </svg>
             </div>
 
-            {/* Header - Reduced size */}
+            {/* Header */}
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -152,7 +214,7 @@ const CropDiseaseDetectionPage = () => {
                             </div>
                         </div>
 
-                        {/* Environmental Indicators - Reduced size */}
+                        {/* Environmental Indicators */}
                         <div className="hidden lg:flex items-center space-x-2">
                             <motion.div
                                 whileHover={{ scale: 1.05, y: -1 }}
@@ -197,7 +259,7 @@ const CropDiseaseDetectionPage = () => {
 
             <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="grid lg:grid-cols-2 gap-8">
-                    {/* Upload Section - Made more compact */}
+                    {/* Upload Section */}
                     <motion.div
                         initial={{ opacity: 0, x: -30 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -224,7 +286,7 @@ const CropDiseaseDetectionPage = () => {
                                 </motion.div>
                             )}
 
-                            {/* Normal Image Upload - Reduced size */}
+                            {/* Normal Image Upload */}
                             <motion.div
                                 whileHover={{ scale: 1.01, y: -1 }}
                                 className="mb-4"
@@ -283,7 +345,7 @@ const CropDiseaseDetectionPage = () => {
                                 </div>
                             </motion.div>
 
-                            {/* Hyperspectral Image Upload - Reduced size */}
+                            {/* Hyperspectral Image Upload */}
                             <motion.div
                                 whileHover={{ scale: 1.01, y: -1 }}
                                 className="mb-4"
@@ -342,7 +404,7 @@ const CropDiseaseDetectionPage = () => {
                                 </div>
                             </motion.div>
 
-                            {/* True Label Upload - New field */}
+                            {/* True Label Upload */}
                             <motion.div
                                 whileHover={{ scale: 1.01, y: -1 }}
                                 className="mb-4"
@@ -351,7 +413,7 @@ const CropDiseaseDetectionPage = () => {
                                     <div className="w-4 h-4 bg-gradient-to-br from-purple-500 to-pink-600 rounded flex items-center justify-center mr-2">
                                         <FileText className="w-2 h-2 text-white" />
                                     </div>
-                                    Upload true label file (.pt format)
+                                    Upload true label file (.pt format) - Optional
                                 </label>
                                 <div className="relative group">
                                     <input
@@ -401,10 +463,10 @@ const CropDiseaseDetectionPage = () => {
                                 </div>
                             </motion.div>
 
-                            {/* Analysis Button - Reduced size */}
+                            {/* Analysis Button */}
                             <motion.button
                                 onClick={runAnalysis}
-                                disabled={(!normalImage.file && !hyperspectralImage.file) || isAnalyzing}
+                                disabled={(!normalImage.file || !hyperspectralImage.file) || isAnalyzing}
                                 whileHover={{ scale: 1.02, y: -2 }}
                                 whileTap={{ scale: 0.98 }}
                                 className="w-full py-3 px-6 bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 hover:from-emerald-700 hover:via-green-700 hover:to-teal-700 text-white font-bold text-sm rounded-xl shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-3 relative overflow-hidden group border border-white/20"
@@ -424,7 +486,7 @@ const CropDiseaseDetectionPage = () => {
                         </div>
                     </motion.div>
 
-                    {/* Results Section - Made more compact */}
+                    {/* Results Section */}
                     <motion.div
                         initial={{ opacity: 0, x: 30 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -479,7 +541,7 @@ const CropDiseaseDetectionPage = () => {
                                             animate={{ opacity: 1, y: 0 }}
                                             className="space-y-3"
                                         >
-                                            {/* Main Result Card - Reduced size */}
+                                            {/* Main Result Card */}
                                             <motion.div
                                                 initial={{ scale: 0.9, rotateY: -15 }}
                                                 animate={{ scale: 1, rotateY: 0 }}
@@ -498,24 +560,48 @@ const CropDiseaseDetectionPage = () => {
                                                             <h3 className="text-lg font-bold capitalize mb-1">
                                                                 {getResultTitle(result.class)}
                                                             </h3>
-                                                            <div className="flex items-center space-x-2">
-                                                                <p className="text-white/95 text-sm font-semibold">Confidence: {result.confidence.toFixed(1)}%</p>
-                                                                <div className="flex-1 max-w-16 bg-white/25 rounded-full h-1 overflow-hidden">
-                                                                    <motion.div
-                                                                        initial={{ width: 0 }}
-                                                                        animate={{ width: `${result.confidence}%` }}
-                                                                        transition={{ duration: 1.5, delay: 0.5, ease: "easeOut" }}
-                                                                        className="bg-white h-1 rounded-full shadow-sm"
-                                                                    />
-                                                                </div>
-                                                            </div>
+                                                            <p className="text-white/90 text-sm font-semibold">
+                                                                Predicted: {result.predicted_class}
+                                                            </p>
+                                                            <p className="text-white/85 text-sm">
+                                                                Label Index: {result.predicted_label}
+                                                            </p>
+                                                            {result.true_class && (
+                                                                <p className="text-white/85 text-sm">True Class: {result.true_class}</p>
+                                                            )}
                                                         </div>
                                                     </div>
                                                     <p className="text-white/95 text-xs leading-relaxed font-medium">{result.details}</p>
                                                 </div>
                                             </motion.div>
 
-                                            {/* Classification Breakdown - Reduced size */}
+                                            {/* Visualization Image */}
+                                            {visualizationImage && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: 20 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: 0.2 }}
+                                                    className="bg-white/35 backdrop-blur-sm rounded-2xl shadow-xl p-4 border border-white/50"
+                                                >
+                                                    <h4 className="text-sm font-bold text-gray-900 mb-3 text-center flex items-center justify-center">
+                                                        <Camera className="w-4 h-4 mr-2 text-emerald-600" />
+                                                        Analysis Visualization
+                                                    </h4>
+                                                    <div className="flex justify-center">
+                                                        <img
+                                                            src={visualizationImage}
+                                                            alt="Analysis result with predictions"
+                                                            className="max-w-full h-auto rounded-xl shadow-lg border border-gray-200 max-h-96 min-h-64"
+                                                            style={{ maxHeight: '400px', minHeight: '250px' }}
+                                                        />
+                                                    </div>
+                                                    <p className="text-center text-gray-600 text-xs mt-2">
+                                                        RGB image with AI prediction overlay
+                                                    </p>
+                                                </motion.div>
+                                            )}
+
+                                            {/* Classification Details */}
                                             <motion.div
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
@@ -524,7 +610,7 @@ const CropDiseaseDetectionPage = () => {
                                             >
                                                 <h4 className="text-sm font-bold text-gray-900 mb-3 text-center flex items-center justify-center">
                                                     <Target className="w-4 h-4 mr-2 text-emerald-600" />
-                                                    Classification Details
+                                                    Model Classification Details
                                                 </h4>
                                                 <div className="space-y-2">
                                                     <motion.div
@@ -536,32 +622,15 @@ const CropDiseaseDetectionPage = () => {
                                                                 <CheckCircle className="w-4 h-4 text-white" />
                                                             </div>
                                                             <div>
-                                                                <span className="font-bold text-emerald-900 text-xs">Healthy Crop</span>
+                                                                <span className="font-bold text-emerald-900 text-xs">Health (Class 0)</span>
                                                                 <p className="text-emerald-800 font-medium text-xs">Normal vegetation indices</p>
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center space-x-1">
                                                             <Activity className="w-3 h-3 text-emerald-600" />
-                                                            <div className="text-emerald-800 font-bold text-xs">Optimal</div>
-                                                        </div>
-                                                    </motion.div>
-
-                                                    <motion.div
-                                                        whileHover={{ scale: 1.02, x: 4 }}
-                                                        className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-red-50 via-rose-50 to-pink-50 border-2 border-red-300 shadow-md hover:shadow-lg transition-all duration-300"
-                                                    >
-                                                        <div className="flex items-center space-x-2">
-                                                            <div className="w-8 h-8 bg-gradient-to-br from-red-500 via-rose-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
-                                                                <AlertTriangle className="w-4 h-4 text-white" />
+                                                            <div className="text-emerald-800 font-bold text-xs">
+                                                                {result.predicted_class === 'Health' ? 'PREDICTED' : 'Not detected'}
                                                             </div>
-                                                            <div>
-                                                                <span className="font-bold text-red-900 text-xs">Rust Disease</span>
-                                                                <p className="text-red-800 font-medium text-xs">Wheat stripe rust detected</p>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex items-center space-x-1">
-                                                            <Zap className="w-3 h-3 text-red-600" />
-                                                            <div className="text-red-800 font-bold text-xs">Action Required</div>
                                                         </div>
                                                     </motion.div>
 
@@ -574,13 +643,36 @@ const CropDiseaseDetectionPage = () => {
                                                                 <XCircle className="w-4 h-4 text-white" />
                                                             </div>
                                                             <div>
-                                                                <span className="font-bold text-amber-900 text-xs">Other Conditions</span>
-                                                                <p className="text-amber-800 font-medium text-xs">Stress, deficiency, etc.</p>
+                                                                <span className="font-bold text-amber-900 text-xs">Non-Rust Disease (Class 1)</span>
+                                                                <p className="text-amber-800 font-medium text-xs">Other stress conditions</p>
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center space-x-1">
                                                             <Activity className="w-3 h-3 text-amber-600" />
-                                                            <div className="text-amber-800 font-bold text-xs">Monitor</div>
+                                                            <div className="text-amber-800 font-bold text-xs">
+                                                                {result.predicted_class === 'non-rust disease' ? 'PREDICTED' : 'Not detected'}
+                                                            </div>
+                                                        </div>
+                                                    </motion.div>
+
+                                                    <motion.div
+                                                        whileHover={{ scale: 1.02, x: 4 }}
+                                                        className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-red-50 via-rose-50 to-pink-50 border-2 border-red-300 shadow-md hover:shadow-lg transition-all duration-300"
+                                                    >
+                                                        <div className="flex items-center space-x-2">
+                                                            <div className="w-8 h-8 bg-gradient-to-br from-red-500 via-rose-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+                                                                <AlertTriangle className="w-4 h-4 text-white" />
+                                                            </div>
+                                                            <div>
+                                                                <span className="font-bold text-red-900 text-xs">Yellow Rust Disease (Class 2)</span>
+                                                                <p className="text-red-800 font-medium text-xs">Wheat stripe rust detected</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center space-x-1">
+                                                            <Zap className="w-3 h-3 text-red-600" />
+                                                            <div className="text-red-800 font-bold text-xs">
+                                                                {result.predicted_class === 'yellow rust disease' ? 'PREDICTED' : 'Not detected'}
+                                                            </div>
                                                         </div>
                                                     </motion.div>
                                                 </div>
@@ -610,7 +702,7 @@ const CropDiseaseDetectionPage = () => {
                                                     <Brain className="w-6 h-6 text-white" />
                                                 </motion.div>
                                                 <h3 className="text-lg font-bold text-gray-800 mb-2">Ready for Analysis</h3>
-                                                <p className="text-gray-700 text-sm font-medium">Upload at least one crop file to begin AI-powered disease detection</p>
+                                                <p className="text-gray-700 text-sm font-medium">Upload both RGB and hyperspectral files to begin AI-powered disease detection</p>
                                             </div>
                                         </motion.div>
                                     )}
@@ -621,7 +713,7 @@ const CropDiseaseDetectionPage = () => {
                 </div>
             </div>
 
-            {/* Footer - Reduced size */}
+            {/* Footer */}
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

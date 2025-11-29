@@ -1,22 +1,26 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
-import { Leaf, Bug, MapPin, Thermometer, Camera, Shield, Globe, Activity, ArrowRight, Sparkles } from 'lucide-react';
+import { Leaf, Bug, Camera, ArrowRight, Sparkles } from 'lucide-react';
 import { AuthContext } from '../context/authcontext';
 import { useNavigate } from 'react-router-dom';
 
 const AgriTools = () => {
   const navigate = useNavigate();
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(true);
 
-  const { isLoggedIn } = useContext(AuthContext);
-  useEffect(() => {
-    if (isLoggedIn) {
-      setIsLoaded(true);
-    } else {
-      navigate("/login");
-    }
-  }, []);
 
+  // const { isLoggedIn } = useContext(AuthContext);
+  // useEffect(() => {
+  //   if (isLoggedIn) {
+  //     setIsLoaded(true);
+  //   } else {
+  //     navigate("/login");
+  //   }
+  // }, [isLoggedIn]);
+
+  const handleCardClick = (route) => {
+    navigate(`/${route}`);
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -56,47 +60,27 @@ const AgriTools = () => {
   const features = [
     {
       id: 1,
-      title: "Crop Health Diagnostics",
+      title: "Crop Disease Detection",
       description: "AI-powered analysis using hyperspectral imaging to detect disease symptoms, nutrient deficiencies, and stress indicators before visible symptoms appear.",
       icon: Camera,
       gradient: "from-emerald-400 via-green-500 to-teal-600",
       bgGradient: "from-emerald-50 to-green-100",
       iconBg: "from-emerald-400 to-green-600",
       stats: "98% Accuracy",
-      features: ["Real-time Analysis", "Early Detection", "Disease Classification"]
+      features: ["Real-time Analysis", "Early Detection", "Disease Classification"],
+      route: "crop-disease-detection"
     },
     {
       id: 2,
-      title: "Intelligent Pest Detection",
+      title: "Pest Risk Detection",
       description: "Advanced computer vision and machine learning algorithms identify pest species, population density, and infestation patterns across your fields.",
       icon: Bug,
       gradient: "from-orange-400 via-red-500 to-pink-600",
       bgGradient: "from-orange-50 to-red-100",
       iconBg: "from-orange-400 to-red-600",
       stats: "15+ Pest Types",
-      features: ["Species Identification", "Population Tracking", "Damage Assessment"]
-    },
-    {
-      id: 3,
-      title: "Geographic Risk Mapping",
-      description: "Location-based risk assessment combining weather patterns, historical data, and regional pest/disease prevalence for predictive insights.",
-      icon: MapPin,
-      gradient: "from-blue-400 via-indigo-500 to-purple-600",
-      bgGradient: "from-blue-50 to-indigo-100",
-      iconBg: "from-blue-400 to-indigo-600",
-      stats: "Field-Level Precision",
-      features: ["Weather Integration", "Risk Modeling", "Zone Mapping"]
-    },
-    {
-      id: 4,
-      title: "Soil & Environmental Monitor",
-      description: "Comprehensive monitoring of soil moisture, pH levels, temperature, humidity, soil and crop nutrient content using IoT sensors and satellite data.",
-      icon: Thermometer,
-      gradient: "from-violet-400 via-purple-500 to-indigo-600",
-      bgGradient: "from-violet-50 to-purple-100",
-      iconBg: "from-violet-400 to-purple-600",
-      stats: "24/7 Monitoring",
-      features: ["Soil Analysis", "Environmental Tracking", "Nutrient Mapping"]
+      features: ["Species Identification", "Population Tracking", "Damage Assessment"],
+      route: "pestcontrol"
     }
   ];
 
@@ -309,6 +293,7 @@ const AgriTools = () => {
 
                       {/* Action Button */}
                       <motion.button
+                        onClick={() => handleCardClick(feature.route)}
                         className={`w-full cursor-pointer bg-gradient-to-r ${feature.gradient} text-white font-semibold py-4 px-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 flex items-center justify-center space-x-3 group/btn relative overflow-hidden`}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
@@ -336,8 +321,6 @@ const AgriTools = () => {
             </div>
           </motion.div>
         </div>
-
-
       </div>
     </div>
   );

@@ -86,7 +86,7 @@ const Hero = () => {
             <motion.button
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => window.location.href = '/agriai'}
+              onClick={() =>(navigate('/agriai'))}
               className="group bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white border-2 border-white/30 px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 flex items-center gap-2 cursor-pointer"
             >
               <MessageCircle className="w-5 h-5" />

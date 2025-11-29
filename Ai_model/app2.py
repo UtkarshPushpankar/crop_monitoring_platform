@@ -1,25 +1,19 @@
 import os
+import io
 import torch
 import torch.nn as nn
-import numpy as np
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-from PIL import Image
-import torchvision.transforms as T
 import torchvision.models as models
+from flask import Flask, request, jsonify, send_file
+from flask_cors import CORS  # Add this import
 from timm.models import create_model
-import io
-import base64
+import torchvision.transforms as T
+from PIL import Image, ImageDraw, ImageFont
 
-app = Flask(__name__)
-CORS(app)
-
-# Set device
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"Using device: {device}")
+# -----------------------------
+# Model Definitions
+# -----------------------------
 
 class AHAM(nn.Module):
-    """Adaptive Hyperspectral Attention Module"""
     def __init__(self, embed_dim, reduction=16):
         super(AHAM, self).__init__()
         self.avg_pool = nn.AdaptiveAvgPool1d(1)
@@ -36,11 +30,13 @@ class AHAM(nn.Module):
         x_weighted = (x * attention.unsqueeze(1)).mean(dim=1)
         return x_weighted, attention
 
+
 class SimCLR(nn.Module):
-    """SimCLR model for hyperspectral data"""
     def __init__(self, backbone="vit_base_patch16_224", feature_dim=128, input_channels=100):
         super(SimCLR, self).__init__()
         self.encoder = create_model(backbone, pretrained=False, num_classes=0)
+
+        # Replace input conv for HSI input
         new_conv_layer = nn.Conv2d(
             input_channels,
             self.encoder.patch_embed.proj.out_channels,
@@ -50,6 +46,7 @@ class SimCLR(nn.Module):
             bias=False
         )
         self.encoder.patch_embed.proj = new_conv_layer
+
         self.aham = AHAM(embed_dim=self.encoder.num_features)
         self.projector = nn.Sequential(
             nn.Linear(self.encoder.num_features, 512),
@@ -65,21 +62,15 @@ class SimCLR(nn.Module):
             return projections, attention
         return projections
 
+
 class DualStreamFusionModel(nn.Module):
-    """Dual stream fusion model combining HSI and RGB"""
     def __init__(self, hsi_ssl_model, num_classes=3):
         super(DualStreamFusionModel, self).__init__()
-        
-        # HSI Branch
         self.hsi_encoder = hsi_ssl_model
         for param in self.hsi_encoder.parameters():
             param.requires_grad = False
-
-        # RGB branch
         self.rgb_encoder = models.resnet18(pretrained=True)
-        self.rgb_encoder.fc = nn.Identity()  # Remove classifier
-
-        # Fusion Head
+        self.rgb_encoder.fc = nn.Identity()
         self.classifier = nn.Sequential(
             nn.Linear(128 + 512, 256),
             nn.ReLU(),
@@ -94,206 +85,187 @@ class DualStreamFusionModel(nn.Module):
         logits = self.classifier(fused_features)
         return logits
 
-# Global variables for model
-model = None
-class_names = ["healthy", "rust", "other"]
 
-def load_model():
-    """Load the trained model"""
-    global model
-    try:
-        # Create model architecture
-        hsi_model_architecture = SimCLR(input_channels=100)
-        model = DualStreamFusionModel(hsi_model_architecture, num_classes=3)
-        
-        # Load weights - Update this path to your model weights
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        model_path = os.path.join(script_dir, "models", "dual_stream_fusion_model.pth")
-        if os.path.exists(model_path):
-            model.load_state_dict(torch.load(model_path, map_location=device))
-            print("Model weights loaded successfully.")
-        else:
-            print(f"Warning: Model weights not found at {model_path}")
-            print("Using randomly initialized model for demo purposes.")
-        
-        model.to(device)
-        model.eval()
-        print("Model loaded and ready for inference.")
-        
-    except Exception as e:
-        print(f"Error loading model: {str(e)}")
-        model = None
+# -----------------------------
+# Load Model
+# -----------------------------
+device = torch.device("cpu")
 
-def preprocess_rgb_image(image_file):
-    """Preprocess RGB image for the model"""
-    try:
-        # Open image
-        image = Image.open(image_file).convert('RGB')
-        
-        # Define transforms (matching training preprocessing)
-        transform = T.Compose([
-            T.Resize((224, 224)),
-            T.ToTensor(),
-            T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
-        
-        # Apply transform and add batch dimension
-        rgb_tensor = transform(image).unsqueeze(0)
-        return rgb_tensor.to(device)
-        
-    except Exception as e:
-        raise ValueError(f"Error preprocessing RGB image: {str(e)}")
+class_names = ["Health", "non-rust disease", "yellow rust disease"]
 
-def preprocess_hyperspectral_image(image_file):
-    """Preprocess hyperspectral image for the model"""
-    try:
-        # Read the file content
-        file_content = image_file.read()
-        
-        # Try to load as numpy array first
-        try:
-            # Reset file pointer
-            image_file.seek(0)
-            hsi_data = np.load(io.BytesIO(file_content))
-        except:
-            # If not a numpy file, try to load as regular image and simulate hyperspectral
-            image_file.seek(0)
-            rgb_image = Image.open(image_file).convert('RGB')
-            rgb_array = np.array(rgb_image)
-            
-            # Simulate hyperspectral data by replicating and slightly modifying RGB channels
-            # This is just for demo - in reality, you'd have actual hyperspectral data
-            hsi_data = np.zeros((100, rgb_array.shape[0], rgb_array.shape[1]))
-            
-            # Fill with simulated spectral bands
-            for i in range(100):
-                if i < 33:
-                    hsi_data[i] = rgb_array[:, :, 0] / 255.0  # Red-based bands
-                elif i < 66:
-                    hsi_data[i] = rgb_array[:, :, 1] / 255.0  # Green-based bands  
-                else:
-                    hsi_data[i] = rgb_array[:, :, 2] / 255.0  # Blue-based bands
-                    
-                # Add some noise to simulate different spectral responses
-                hsi_data[i] += np.random.normal(0, 0.1, hsi_data[i].shape)
-                hsi_data[i] = np.clip(hsi_data[i], 0, 1)
-        
-        # Resize if necessary
-        if hsi_data.shape[1:] != (128, 128):
-            # Resize each band
-            from scipy.ndimage import zoom
-            zoom_factors = (1, 128/hsi_data.shape[1], 128/hsi_data.shape[2])
-            hsi_data = zoom(hsi_data, zoom_factors)
-        
-        # Ensure correct shape (100, 128, 128)
-        if hsi_data.shape[0] != 100:
-            # If different number of bands, interpolate or repeat
-            if hsi_data.shape[0] < 100:
-                # Repeat bands to reach 100
-                repeats = 100 // hsi_data.shape[0] + 1
-                hsi_data = np.tile(hsi_data, (repeats, 1, 1))[:100]
-            else:
-                # Take first 100 bands
-                hsi_data = hsi_data[:100]
-        
-        # Convert to tensor and add batch dimension
-        hsi_tensor = torch.tensor(hsi_data, dtype=torch.float32).unsqueeze(0)
-        return hsi_tensor.to(device)
-        
-    except Exception as e:
-        raise ValueError(f"Error preprocessing hyperspectral image: {str(e)}")
+hsi_model_architecture = SimCLR(input_channels=100)
+model = DualStreamFusionModel(hsi_model_architecture, num_classes=len(class_names))
 
-@app.route('/health', methods=['GET'])
-def health_check():
-    """Health check endpoint"""
-    return jsonify({"status": "healthy", "model_loaded": model is not None})
+script_dir = os.path.dirname(os.path.abspath(__file__))
+model_path = os.path.join(script_dir, "models", "dual_stream_fusion_model.pth")
 
-@app.route('/predict', methods=['POST'])
+# Add error handling for model loading
+try:
+    model.load_state_dict(torch.load(model_path, map_location=device))
+    model.eval()
+    print(f"Model loaded successfully from {model_path}")
+except FileNotFoundError:
+    print(f"Warning: Model file not found at {model_path}")
+    print("The API will still run but predictions will fail until model is available")
+
+# -----------------------------
+# Flask App
+# -----------------------------
+app = Flask(__name__)
+
+# Enable CORS for all routes - THIS IS THE KEY FIX
+CORS(app, origins=["http://localhost:3000", "http://127.0.0.1:3000"])
+
+# Alternative manual CORS setup if you don't want to install flask-cors:
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
+
+@app.route("/")
+def home():
+    return jsonify({"message": "DualStreamFusionModel Flask API Running ✅"})
+
+
+@app.route("/predict", methods=["POST", "OPTIONS"])
 def predict():
-    """Main prediction endpoint"""
+    # Handle preflight OPTIONS request
+    if request.method == 'OPTIONS':
+        response = jsonify({'message': 'OK'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'POST')
+        return response
+
     try:
-        # Check if model is loaded
-        if model is None:
-            return jsonify({"error": "Model not loaded"}), 500
-        
-        # Check if files are provided
-        rgb_file = request.files.get('rgb_image')
-        hsi_file = request.files.get('hsi_image')
-        
-        if not rgb_file and not hsi_file:
-            return jsonify({"error": "At least one image (RGB or hyperspectral) must be provided"}), 400
-        
-        # Preprocess images
-        rgb_tensor = None
-        hsi_tensor = None
-        
-        if rgb_file:
-            rgb_tensor = preprocess_rgb_image(rgb_file)
-        
-        if hsi_file:
-            hsi_tensor = preprocess_hyperspectral_image(hsi_file)
-        
-        # Handle cases where only one modality is provided
-        if rgb_tensor is None:
-            # Create dummy RGB tensor
-            rgb_tensor = torch.zeros(1, 3, 224, 224).to(device)
-        
-        if hsi_tensor is None:
-            # Create dummy HSI tensor
-            hsi_tensor = torch.zeros(1, 100, 128, 128).to(device)
-        
-        # Run inference
+        hsi_file = request.files.get("hsi")
+        rgb_file = request.files.get("rgb")
+        label_file = request.files.get("label")  # optional
+
+        if hsi_file is None or rgb_file is None:
+            return jsonify({"error": "Please upload HSI (.pt) and RGB (.pt) files"}), 400
+
+        # Add debugging
+        print(f"Received files: HSI={hsi_file.filename}, RGB={rgb_file.filename}")
+
+        hsi_tensor = torch.load(hsi_file, map_location=device).unsqueeze(0).to(device)
+        rgb_tensor = torch.load(rgb_file, map_location=device).unsqueeze(0).to(device)
+
+        print(f"Tensor shapes: HSI={hsi_tensor.shape}, RGB={rgb_tensor.shape}")
+
         with torch.no_grad():
             outputs = model(hsi_tensor, rgb_tensor)
-            probabilities = torch.softmax(outputs, dim=1)
-            predicted_class_idx = torch.argmax(probabilities, dim=1).item()
-            confidence = probabilities[0, predicted_class_idx].item() * 100
-        
-        # Map prediction to class name
-        predicted_class = class_names[predicted_class_idx]
-        
-        # Create detailed result based on prediction
-        if predicted_class == "healthy":
-            result = {
-                "class": "healthy",
-                "confidence": confidence,
-                "details": "Crop shows healthy vegetation indices with normal spectral signatures and optimal chlorophyll content. NDVI values indicate robust photosynthetic activity."
-            }
-        elif predicted_class == "rust":
-            result = {
-                "class": "rust", 
-                "confidence": confidence,
-                "details": "Detected wheat stripe rust patterns in hyperspectral analysis with characteristic yellow-orange pustules. Immediate fungicide treatment recommended."
-            }
-        else:  # other
-            result = {
-                "class": "other",
-                "confidence": confidence,
-                "details": "Identified stress indicators suggesting nutrient deficiency, water stress, or early-stage disease symptoms. Monitor closely and consider soil testing."
-            }
-        
-        return jsonify(result)
-        
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 400
-    except Exception as e:
-        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+            _, predicted_label_idx = torch.max(outputs, 1)
 
-@app.route('/model-info', methods=['GET'])
-def model_info():
-    """Get model information"""
-    return jsonify({
-        "model_loaded": model is not None,
-        "classes": class_names,
-        "input_requirements": {
-            "rgb": "RGB image, any common format (JPEG, PNG, etc.)",
-            "hyperspectral": "Numpy array file (.npy) with shape (100, H, W) or regular image (will be simulated)"
+        predicted_class_name = class_names[predicted_label_idx.item()]
+
+        # true label if provided
+        true_class_name = None
+        if label_file:
+            true_label_idx = torch.load(label_file, map_location=device).item()
+            true_class_name = class_names[true_label_idx]
+
+        result = {
+            "predicted_label": int(predicted_label_idx.item()),
+            "predicted_class": predicted_class_name,
+            "true_class": true_class_name
         }
+
+        print(f"Prediction result: {result}")
+        return jsonify(result)
+
+    except Exception as e:
+        print(f"Error in predict: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/predict_image", methods=["POST", "OPTIONS"])
+def predict_image():
+    # Handle preflight OPTIONS request
+    if request.method == 'OPTIONS':
+        response = jsonify({'message': 'OK'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'POST')
+        return response
+
+    try:
+        hsi_file = request.files.get("hsi")
+        rgb_file = request.files.get("rgb")
+        label_file = request.files.get("label")  # optional
+
+        if hsi_file is None or rgb_file is None:
+            return jsonify({"error": "Please upload HSI (.pt) and RGB (.pt) files"}), 400
+
+        hsi_tensor = torch.load(hsi_file, map_location=device).unsqueeze(0).to(device)
+        rgb_tensor = torch.load(rgb_file, map_location=device).unsqueeze(0).to(device)
+
+        with torch.no_grad():
+            outputs = model(hsi_tensor, rgb_tensor)
+            _, predicted_label_idx = torch.max(outputs, 1)
+
+        predicted_class_name = class_names[predicted_label_idx.item()]
+
+        # true label if provided
+        true_class_name = None
+        if label_file:
+            true_label_idx = torch.load(label_file, map_location=device).item()
+            true_class_name = class_names[true_label_idx]
+
+        # ---- Convert RGB tensor back to image ----
+        mean = torch.tensor([0.485, 0.456, 0.406]).view(3, 1, 1).to(device)
+        std = torch.tensor([0.229, 0.224, 0.225]).view(3, 1, 1).to(device)
+        rgb_img_tensor_unnormalized = rgb_tensor.squeeze(0) * std + mean
+        rgb_img_pil = T.ToPILImage()(rgb_img_tensor_unnormalized.cpu())
+
+        # ---- Draw text ----
+        draw = ImageDraw.Draw(rgb_img_pil)
+        try:
+            # Try to use a better font
+            font = ImageFont.truetype("arial.ttf", 16)
+        except:
+            font = ImageFont.load_default()
+        
+        y_offset = 10
+
+        # predicted label
+        draw.text((10, y_offset), f"Predicted: {predicted_class_name}",
+                  fill=(255, 255, 255), font=font)
+        y_offset += 25
+
+        # true label if available
+        if true_class_name:
+            draw.text((10, y_offset), f"True: {true_class_name}",
+                      fill=(0, 255, 0), font=font)
+
+        # ---- Save to memory ----
+        img_io = io.BytesIO()
+        rgb_img_pil.save(img_io, "PNG")
+        img_io.seek(0)
+
+        return send_file(img_io, mimetype="image/png")
+
+    except Exception as e:
+        print(f"Error in predict_image: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+# Health check endpoint
+@app.route("/health", methods=["GET"])
+def health_check():
+    return jsonify({
+        "status": "healthy",
+        "model_loaded": "model" in globals(),
+        "device": str(device)
     })
 
-if __name__ == '__main__':
-    # Load model on startup
-    load_model()
-    
-    # Run the Flask app
-    app.run(host='0.0.0.0', port=5000, debug=True)
+
+# -----------------------------
+# Run Flask
+# -----------------------------
+if __name__ == "__main__":
+    print("Starting Flask server...")
+    print(f"Server will run on http://localhost:5000")
+    app.run(host="0.0.0.0", port=5000, debug=True)

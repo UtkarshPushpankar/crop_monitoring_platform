@@ -24,8 +24,9 @@ const Navbar = () => {
   }, [isDropdownOpen]);
 
   const navItems = [
+    { name: 'Home', href: '/', active: false },
     { name: 'About', href: '/about', active: false },
-    { name: 'Dashboard', href: '/dashboard', active: false },
+    // { name: 'Dashboard', href: '/dashboard', active: false },
     { name: 'Contact', href: '/contact', active: false },
   ];
 

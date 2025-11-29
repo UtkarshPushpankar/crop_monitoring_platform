@@ -5,6 +5,7 @@ from langchain.chains import LLMChain
 from langchain.schema import HumanMessage
 import os, base64
 
+import numpy as np
 
 load_dotenv()
 key = os.getenv("google_api_key")
@@ -15,12 +16,11 @@ llm = ChatGoogleGenerativeAI(
     google_api_key=key
 )
 
-
 prompt = PromptTemplate(
     input_variables=['messages', 'query', 'language'],
     template="""
-You are a professional agricultural expert with in-depth knowledge of crops, soil, trees, fertilizers, pesticides, and all farming-related topics.
-You always provide clear, accurate, and helpful advice using multiple sources of knowledge. 
+You are a professional agricultural expert with deep knowledge of crops, soil, trees, fertilizers, pesticides, and all farming topics.
+You always provide clear, accurate, and helpful advice.
 
 You are given:
 - Previous conversation messages: {messages}
@@ -29,19 +29,18 @@ You are given:
 
 Instructions:
 1. Answer the user's question based on the previous conversation context.
-2. Only provide answers if the query is related to farming, soil, crops, trees, fertilizers, pesticides, OR explanation of graphs/charts related to agriculture.
-3. If the query is NOT related to farming or agricultural graphs/charts, politely respond: 
+2. Only answer if the query is related to farming, soil, crops, trees, fertilizers, pesticides, or agricultural graphs/charts.
+3. If the query is NOT related, politely respond: 
    "I'm sorry, I can only provide advice on farming, crops, soil, trees, pesticides, or agricultural graphs/charts."
-4. Respond in the language specified by {language}.
-5. Keep responses concise and to the point.
-6. Always maintain a professional and respectful tone.
-7. Maximum 50 words.
+4. Respond **directly in {language}**, using readable text, **without any Unicode escape sequences**.
+5. Keep responses concise and professional.
+6. Maximum 50 words.
 
-Provide your answer concisely, clearly, and in {language}.
-
-Answer:
+Answer in **{language}** (no Unicode escape codes, plain readable text):
 """
 )
+
+
 
 
 chain = LLMChain(llm=llm, prompt=prompt)
@@ -85,3 +84,106 @@ Instructions:
     # Call Gemini with multimodal input
     response = llm.invoke([HumanMessage(content=content)])
     return response.content
+
+
+e_c_loss_treatment = 0                                        
+e_c_loss_no_treatment = 868                                   
+e_c_treatment_application = 795                                 
+e_c_monitoring = 48                                          
+e_c_treatment_treatment = e_c_treatment_application/10 - 24 
+
+def expected_cost(
+    p_pest,                     # probability of pest occurence
+    treatment,                  # treatment indicator (decision variable)
+    e_c_loss_treatment,         # expected cost of yield loss given treatment
+    e_c_loss_no_treatment,      # expected cost of yield loss given no treatment
+    e_c_treatment_treatment,    # expected cost of treatment given treatment
+):
+    e_c_loss_pest = treatment * e_c_loss_treatment \
+             + (1-treatment) * e_c_loss_no_treatment
+    e_c_loss = p_pest * e_c_loss_pest
+
+    e_c_treatment = treatment * e_c_treatment_treatment
+    return e_c_loss + e_c_treatment
+
+
+def expected_hat_cost(
+    p_pest,                     # probability of pest occurence
+    treatment,                  # treatment indicator (decision variable)
+    e_c_loss_treatment,         # expected cost of yield loss given treatment
+    e_c_loss_no_treatment,      # expected cost of yield loss given no treatment
+    e_c_treatment_treatment,    # expected cost of treatment given treatment
+):
+    e_c = expected_cost(
+        p_pest,
+        treatment,
+        e_c_loss_treatment,
+        e_c_loss_no_treatment,
+        e_c_treatment_treatment,
+    )
+
+    shift = p_pest * e_c_loss_no_treatment
+    return e_c - shift
+
+def e_c_hat_given_no_ppi(
+    p_pest,                     # probability of pest occurence
+    e_c_loss_treatment,         # expected cost of yield loss given treatment
+    e_c_loss_no_treatment,      # expected cost of yield loss given no treatment
+    e_c_treatment_treatment,    # expected cost of treatment given treatment
+):
+    e_c_treatment = expected_hat_cost(
+        p_pest,
+        1,
+        e_c_loss_treatment,
+        e_c_loss_no_treatment,
+        e_c_treatment_treatment,
+    )
+    e_c_no_treatment = expected_hat_cost(
+        p_pest,
+        0,
+        e_c_loss_treatment,
+        e_c_loss_no_treatment,
+        e_c_treatment_treatment,
+    )
+    return np.minimum(e_c_treatment, e_c_no_treatment)
+
+def e_c_hat_given_ppi(
+    p_pest,                     # probability of pest occurence
+    e_c_loss_treatment,         # expected cost of yield loss given treatment
+    e_c_loss_no_treatment,      # expected cost of yield loss given no treatment
+    e_c_treatment_treatment,    # expected cost of treatment given treatment
+):
+    return p_pest * expected_hat_cost(
+        1,
+        1,
+        e_c_loss_treatment,
+        e_c_loss_no_treatment,
+        e_c_treatment_treatment,
+    )
+
+def evppi(
+    p_pest,                     # probability of pest occurence
+    e_c_loss_treatment,         # expected cost of yield loss given treatment
+    e_c_loss_no_treatment,      # expected cost of yield loss given no treatment
+    e_c_treatment_treatment,    # expected cost of treatment given treatment
+):
+    return e_c_hat_given_no_ppi(
+        p_pest,
+        e_c_loss_treatment,
+        e_c_loss_no_treatment,
+        e_c_treatment_treatment,
+    ) - \
+    e_c_hat_given_ppi(
+        p_pest,
+        e_c_loss_treatment,
+        e_c_loss_no_treatment,
+        e_c_treatment_treatment,
+    )
+
+def e_u_gamma(p_alpha, gamma):
+    if gamma == 0:
+        return p_alpha * 0
+    elif gamma == 1:
+        return p_alpha * (e_c_loss_no_treatment - e_c_loss_treatment - e_c_treatment_treatment) - e_c_monitoring
+    elif gamma == 2:
+        return p_alpha * (e_c_loss_no_treatment - e_c_loss_treatment) - e_c_treatment_treatment

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, Play, Download, AlertTriangle, TrendingUp, Droplets, Wind, Gauge, ThermometerSun } from 'lucide-react';
 
+const PYTHON_URL = import.meta.env.VITE_PYTHON_URL || 'http://localhost:8000';
 const PestControlMonitoring = () => {
     const [formData, setFormData] = useState({
         surfacePressure: '',
@@ -30,6 +31,8 @@ const PestControlMonitoring = () => {
         }
     };
 
+    const [result, setResult] = useState(null);
+
     const generateOutput = async () => {
         if (!uploadedFile) {
             alert('Please upload a CSV file before generating output');
@@ -38,11 +41,29 @@ const PestControlMonitoring = () => {
 
         setIsGenerating(true);
 
-        // Simulate processing time
-        setTimeout(() => {
-            setIsGenerating(false);
+        try {
+            const form = new FormData();
+            form.append('file', uploadedFile);
+            form.append('surfacePressure', formData.surfacePressure);
+            form.append('windSpeed', formData.windSpeed);
+            form.append('relativeHumidity', formData.relativeHumidity);
+            form.append('totalEvaporation', formData.totalEvaporation);
+
+            const res = await fetch(`${PYTHON_URL}/predict`, {
+                method: "POST",
+                body: form
+            });
+
+            const data = await res.json();
+            console.log(data)
+            setResult(data);
             setShowResults(true);
-        }, 3000);
+        } catch (err) {
+            console.error(err);
+            alert("Error while generating output");
+        } finally {
+            setIsGenerating(false);
+        }
     };
 
     const HeatmapCell = ({ intensity, color }) => (
@@ -280,6 +301,8 @@ const PestControlMonitoring = () => {
                         </div>
                     </div>
 
+
+
                     {/* Processing Status */}
                     {isGenerating && (
                         <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-l-4 border-blue-400 p-6 mb-8 rounded-r-2xl shadow-lg backdrop-blur-sm">
@@ -294,91 +317,33 @@ const PestControlMonitoring = () => {
                     )}
 
                     {/* Results Section */}
-                    {showResults && (
-                        <div className="space-y-8">
-                            <div className={`flex justify-between items-center transform transition-all duration-700 ${showResults ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-                                <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent flex items-center">
-                                    <AlertTriangle className="mr-3 text-orange-500" size={32} />
-                                    Pest Risk Analysis Results
-                                </h2>
-                                <button className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-300 flex items-center shadow-lg hover:shadow-xl transform hover:scale-105">
-                                    <Download className="mr-2" size={18} />
-                                    Export Report
-                                </button>
-                            </div>
+ 
 
-                            {/* Heatmap Grid */}
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                <HeatmapVisualization
-                                    title="Predicted Presence Probability"
-                                    data={generateHeatmapData()}
-                                    colorClass="bg-gradient-to-br from-blue-400 to-blue-600"
-                                    unit="Pp"
-                                    date="01 January 2022"
-                                />
-                                <HeatmapVisualization
-                                    title="Predicted Presence Probability"
-                                    data={generateHeatmapData()}
-                                    colorClass="bg-gradient-to-br from-blue-400 to-blue-600"
-                                    unit="Pp"
-                                    date="01 April 2022"
-                                />
-                                <HeatmapVisualization
-                                    title="Predicted Presence Probability"
-                                    data={generateHeatmapData()}
-                                    colorClass="bg-gradient-to-br from-blue-400 to-blue-600"
-                                    unit="Pp"
-                                    date="01 September 2022"
-                                />
-                            </div>
+                            {showResults && result && (
+                                <div className="space-y-8">
+                                    <div className="flex justify-between items-center">
+                                        <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent flex items-center">
+                                            <AlertTriangle className="mr-3 text-orange-500" size={32} />
+                                            Pest Risk Analysis Results
+                                        </h2>
+                                        <button className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-300 flex items-center shadow-lg hover:shadow-xl transform hover:scale-105">
+                                            <Download className="mr-2" size={18} />
+                                            Export Report
+                                        </button>
+                                    </div>
 
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                <HeatmapVisualization
-                                    title="Individual EVPN Risk"
-                                    data={generateHeatmapData()}
-                                    colorClass="bg-gradient-to-br from-yellow-400 to-red-500"
-                                    unit="(INR × ha⁻¹ × a⁻¹)"
-                                    date="01 January 2022"
-                                />
-                                <HeatmapVisualization
-                                    title="Individual EVPN Risk"
-                                    data={generateHeatmapData()}
-                                    colorClass="bg-gradient-to-br from-yellow-400 to-red-500"
-                                    unit="(INR × ha⁻¹ × a⁻¹)"
-                                    date="01 April 2022"
-                                />
-                                <HeatmapVisualization
-                                    title="Individual EVPN Risk"
-                                    data={generateHeatmapData()}
-                                    colorClass="bg-gradient-to-br from-yellow-400 to-red-500"
-                                    unit="(INR × ha⁻¹ × a⁻¹)"
-                                    date="01 September 2022"
-                                />
-                            </div>
+                                    <div className="bg-white rounded-xl shadow-lg p-6">
+                                        <p className="text-lg font-semibold text-gray-700">
+                                            Predicted Pest Risk Probability:{" "}
+                                            <span className="text-red-600">{(result.predicted_prob * 100).toFixed(2)}%</span>
+                                        </p>
+                                        <div className="mt-4">
+                                            <img src={result.graph} alt="Pest Risk Graph" className="rounded-lg shadow-md" />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                <HeatmapVisualization
-                                    title="Treatment Recommendation"
-                                    data={generateHeatmapData()}
-                                    colorClass="bg-gradient-to-br from-purple-500 to-blue-500"
-                                    unit="decision recommendation"
-                                    date="01 January 2022"
-                                />
-                                <HeatmapVisualization
-                                    title="Treatment Recommendation"
-                                    data={generateHeatmapData()}
-                                    colorClass="bg-gradient-to-br from-purple-500 to-blue-500"
-                                    unit="decision recommendation"
-                                    date="01 April 2022"
-                                />
-                                <HeatmapVisualization
-                                    title="Treatment Recommendation"
-                                    data={generateHeatmapData()}
-                                    colorClass="bg-gradient-to-br from-purple-500 to-blue-500"
-                                    unit="decision recommendation"
-                                    date="01 September 2022"
-                                />
-                            </div>
 
                             {/* Analysis Summary */}
                             <div className={`bg-gradient-to-r from-white/60 via-green-50/80 to-blue-50/60 backdrop-blur-xl rounded-3xl p-8 border border-white/30 shadow-2xl transform transition-all duration-700 delay-300 ${showResults ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
@@ -401,8 +366,6 @@ const PestControlMonitoring = () => {
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
                 </div>
             </div>
         </div>

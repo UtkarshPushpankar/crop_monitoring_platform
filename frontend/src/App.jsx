@@ -16,6 +16,8 @@ import AgriTools from './components/AgriTools'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import PestControlMonitoring from './components/PestControlPage'
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -47,8 +49,8 @@ function App() {
           <Route path='/pestcontrol' element={<PestControlMonitoring />}/>
 
         </Routes>
-        <ToastContainer />  
 
+        <ToastContainer />
         {!isFullScreen && <Footer />}
       </div>
     </>
