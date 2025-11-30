@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
 import { Leaf, Bug, Camera, ArrowRight, Sparkles } from 'lucide-react';
-import { AuthContext } from '../context/authcontext';
+import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const AgriTools = () => {

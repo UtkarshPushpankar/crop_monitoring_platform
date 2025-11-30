@@ -5,7 +5,7 @@ import { useInView } from "react-intersection-observer";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import axios from "axios";
 import jsPDF from "jspdf";
-import { AuthContext } from "../context/authcontext";
+import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const PYTHON_URL = import.meta.env.VITE_PYTHON_URL;

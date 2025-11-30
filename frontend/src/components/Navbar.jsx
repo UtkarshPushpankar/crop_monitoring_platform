@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { Search, ShoppingCart, Leaf, Phone, Menu, X } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { AuthContext } from '../context/authcontext';
+import { AuthContext } from '../context/AuthContext';
 import { User, LogOut, Compass, ChevronDown } from 'lucide-react';
 
 const Navbar = () => {

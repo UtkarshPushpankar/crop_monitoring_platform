@@ -3,7 +3,7 @@ import { Leaf } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { toast, Bounce } from 'react-toastify';
-import { AuthContext } from "../context/authcontext";
+import { AuthContext } from "../context/AuthContext";
 
 const Login = () => {
   const navigate = useNavigate();
